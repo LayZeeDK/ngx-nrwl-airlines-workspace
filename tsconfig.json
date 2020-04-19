@@ -26,6 +26,9 @@
       ],
       "@nrwl-airlines/booking/data-access": [
         "libs/booking/data-access/src/index.ts"
+      ],
+      "@nrwl-airlines/shared/data-access": [
+        "libs/shared/data-access/src/index.ts"
       ]
     }
   },

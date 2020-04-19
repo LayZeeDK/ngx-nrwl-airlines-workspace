@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
-  "newProjectRoot": "libs/booking",
+  "newProjectRoot": "libs/shared",
   "projects": {
     "booking-desktop": {
       "projectType": "application",
@@ -190,6 +190,35 @@
             "exclude": [
               "**/node_modules/**",
               "!libs/booking/data-access/**"
+            ]
+          }
+        }
+      }
+    },
+    "shared-data-access": {
+      "projectType": "library",
+      "root": "libs/shared/data-access",
+      "sourceRoot": "libs/shared/data-access/src",
+      "prefix": "nrwl-airlines",
+      "architect": {
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "libs/shared/data-access/src/test.ts",
+            "tsConfig": "libs/shared/data-access/tsconfig.spec.json",
+            "karmaConfig": "libs/shared/data-access/karma.conf.js"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "libs/shared/data-access/tsconfig.lib.json",
+              "libs/shared/data-access/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**",
+              "!libs/shared/data-access/**"
             ]
           }
         }

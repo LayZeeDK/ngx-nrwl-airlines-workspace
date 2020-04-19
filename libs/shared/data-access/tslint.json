@@ -1,0 +1,22 @@
+{
+  "extends": "../../../tslint.json",
+  "rules": {
+    "directive-selector": [
+      true,
+      "attribute",
+      "nrwlAirlines",
+      "camelCase"
+    ],
+    "component-selector": [
+      true,
+      "element",
+      "nrwl-airlines",
+      "kebab-case"
+    ]
+  },
+  "linterOptions": {
+    "exclude": [
+      "!**/*"
+    ]
+  }
+}
