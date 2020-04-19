@@ -1,16 +1,17 @@
-import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import {
+  BookingFeatureShellModule,
+} from '@nrwl-airlines/booking/feature-shell';
 
 import { AppComponent } from './app.component';
 
 @NgModule({
-  declarations: [
-    AppComponent
-  ],
+  bootstrap: [AppComponent],
+  declarations: [AppComponent],
   imports: [
-    BrowserModule
+    BrowserModule,
+    BookingFeatureShellModule,
   ],
-  providers: [],
-  bootstrap: [AppComponent]
 })
 export class AppModule { }
