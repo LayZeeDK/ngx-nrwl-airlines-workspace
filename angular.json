@@ -32,8 +32,8 @@
             "production": {
               "fileReplacements": [
                 {
-                  "replace": "apps/booking/booking-desktop/src/environments/environment.ts",
-                  "with": "apps/booking/booking-desktop/src/environments/environment.prod.ts"
+                  "replace": "libs/shared/environments/src/lib/environment.ts",
+                  "with": "libs/shared/environments/src/lib/environment.prod.ts"
                 }
               ],
               "optimization": true,
@@ -219,6 +219,35 @@
             "exclude": [
               "**/node_modules/**",
               "!libs/shared/data-access/**"
+            ]
+          }
+        }
+      }
+    },
+    "shared-environments": {
+      "projectType": "library",
+      "root": "libs/shared/environments",
+      "sourceRoot": "libs/shared/environments/src",
+      "prefix": "nrwl-airlines",
+      "architect": {
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "libs/shared/environments/src/test.ts",
+            "tsConfig": "libs/shared/environments/tsconfig.spec.json",
+            "karmaConfig": "libs/shared/environments/karma.conf.js"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "libs/shared/environments/tsconfig.lib.json",
+              "libs/shared/environments/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**",
+              "!libs/shared/environments/**"
             ]
           }
         }

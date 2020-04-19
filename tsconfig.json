@@ -29,6 +29,9 @@
       ],
       "@nrwl-airlines/shared/data-access": [
         "libs/shared/data-access/src/index.ts"
+      ],
+      "@nrwl-airlines/shared/environments": [
+        "libs/shared/environments/src/index.ts"
       ]
     }
   },
