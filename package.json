@@ -7,7 +7,8 @@
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e"
+    "e2e": "ng e2e",
+    "generate-project": "node ./tools/generate-project.js"
   },
   "private": true,
   "dependencies": {
@@ -44,6 +45,7 @@
     "rimraf": "^3.0.2",
     "ts-node": "~8.3.0",
     "tslint": "~6.1.0",
-    "typescript": "~3.8.3"
+    "typescript": "~3.8.3",
+    "yargs": "^15.3.1"
   }
 }
