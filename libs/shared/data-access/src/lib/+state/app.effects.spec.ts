@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideMockActions } from '@ngrx/effects/testing';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 
 import { AppEffects } from './app.effects';
 
@@ -16,10 +16,14 @@ describe('AppEffects', () => {
       ]
     });
 
-    effects = TestBed.get<AppEffects>(AppEffects);
+    effects = TestBed.inject(AppEffects);
   });
 
   it('should be created', () => {
     expect(effects).toBeTruthy();
+  });
+
+  it('has an action', () => {
+    actions$ = of({ type: 'Action One' });
   });
 });
