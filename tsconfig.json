@@ -19,7 +19,12 @@
     "lib": [
       "es2018",
       "dom"
-    ]
+    ],
+    "paths": {
+      "@nrwl-airlines/booking/feature-shell": [
+        "libs/booking/feature-shell/src/index.ts"
+      ]
+    }
   },
   "angularCompilerOptions": {
     "strictInjectionParameters": true,
