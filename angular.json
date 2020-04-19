@@ -98,8 +98,7 @@
           "options": {
             "tsConfig": [
               "apps/booking/booking-desktop/tsconfig.app.json",
-              "apps/booking/booking-desktop/tsconfig.spec.json",
-              "apps/booking/booking-desktop/e2e/tsconfig.json"
+              "apps/booking/booking-desktop/tsconfig.spec.json"
             ],
             "exclude": [
               "**/node_modules/**",
