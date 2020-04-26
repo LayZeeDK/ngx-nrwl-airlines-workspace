@@ -9,6 +9,7 @@ import {
 const routes: Routes = [
   {
     path: '',
+    pathMatch: 'full',
     component: PassengerInfoComponent,
   },
 ];
