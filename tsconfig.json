@@ -32,6 +32,9 @@
       ],
       "@nrwl-airlines/shared/environments": [
         "libs/shared/environments/src/index.ts"
+      ],
+      "@nrwl-airlines/booking/feature-passenger-info": [
+        "libs/booking/feature-passenger-info/src/index.ts"
       ]
     }
   },
