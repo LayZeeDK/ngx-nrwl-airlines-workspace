@@ -35,6 +35,9 @@
       ],
       "@nrwl-airlines/booking/feature-passenger-info": [
         "libs/booking/feature-passenger-info/src/index.ts"
+      ],
+      "@nrwl-airlines/booking/feature-flight-search": [
+        "libs/booking/feature-flight-search/src/index.ts"
       ]
     }
   },

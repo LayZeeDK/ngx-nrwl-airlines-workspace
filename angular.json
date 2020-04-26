@@ -280,6 +280,35 @@
           }
         }
       }
+    },
+    "booking-feature-flight-search": {
+      "projectType": "library",
+      "root": "libs/booking/feature-flight-search",
+      "sourceRoot": "libs/booking/feature-flight-search/src",
+      "prefix": "booking",
+      "architect": {
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "libs/booking/feature-flight-search/src/test.ts",
+            "tsConfig": "libs/booking/feature-flight-search/tsconfig.spec.json",
+            "karmaConfig": "libs/booking/feature-flight-search/karma.conf.js"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "libs/booking/feature-flight-search/tsconfig.lib.json",
+              "libs/booking/feature-flight-search/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**",
+              "!libs/booking/feature-flight-search/**"
+            ]
+          }
+        }
+      }
     }
   },
   "defaultProject": "booking-desktop"
