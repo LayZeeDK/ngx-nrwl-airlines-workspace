@@ -210,12 +210,24 @@ function generateLibraryProject({
     + '--entry-file=index --skip-install --skip-package-json');
 }
 
+function generateFeatureState({
+  name,
+  scope,
+}) {
+  execSync(
+    `ng generate @ngrx/schematics:feature +state/${scope} `
+    + `--project=${scope}-${name} --module=${scope}-${name}.module.ts `
+    + '--creators=true --api=false');
+}
+
 function generateWorkspaceLibrary({
   name,
   npmScope,
   scope,
   type,
 }) {
+  const isDataAccess = type === 'data-access';
+
   generateLibraryProject({ name, npmScope, scope });
   renameLibraryProject({ name, scope });
   configureLibraryArchitect({ name, scope });
@@ -223,6 +235,10 @@ function generateWorkspaceLibrary({
   generateLibraryFiles({ name, scope, type });
   configurePathMapping({ name, npmScope, scope });
   configureKarmaConfig({ name, scope });
+
+  if (isDataAccess && withState) {
+    generateFeatureState({ name, scope });
+  }
 }
 
 function moveDirectory({
@@ -312,6 +328,11 @@ const argv = yargs
         description: 'Library name, for example "feature-shell"',
         type: 'string',
       });
+      yargs.option('with-state', {
+        default: false,
+        description: 'Whether to include NgRx +state folder',
+        type: 'boolean',
+      });
     },
     handler: _argv => {
       setImmediate(() => {
@@ -342,4 +363,4 @@ const argv = yargs
   .help().alias('help', 'h')
   .version('1.0.0').alias('version', 'v')
   .argv;
-const { groupingFolder, npmScope, scope, type, name = type } = argv;
+const { groupingFolder, npmScope, scope, type, withState, name = type } = argv;
