@@ -1,11 +1,14 @@
-import { TestBed, async } from '@angular/core/testing';
+import { async, TestBed } from '@angular/core/testing';
+import { RouterModule } from '@angular/router';
+
 import { AppComponent } from './app.component';
 
 describe('AppComponent', () => {
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [
-        AppComponent
+      declarations: [AppComponent],
+      imports: [
+        RouterModule.forRoot([]),
       ],
     }).compileComponents();
   }));
@@ -26,6 +29,6 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement;
-    expect(compiled.querySelector('.content span').textContent).toContain('booking-desktop app is running!');
+    expect(compiled.querySelector('h1').textContent).toContain('booking-desktop');
   });
 });
