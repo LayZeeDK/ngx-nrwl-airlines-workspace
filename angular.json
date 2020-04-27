@@ -333,7 +333,13 @@
             "styles": [
               "apps/booking/booking-mobile/src/styles.css"
             ],
-            "scripts": []
+            "scripts": [],
+            "fileReplacements": [
+              {
+                "replace": "libs/booking/feature-flight-search/src/lib/flight-search/flight-search.component.html",
+                "with": "libs/booking/feature-flight-search/src/lib/flight-search/flight-search.mobile.component.html"
+              }
+            ]
           },
           "configurations": {
             "production": {
@@ -341,6 +347,10 @@
                 {
                   "replace": "apps/booking/booking-mobile/src/environments/environment.ts",
                   "with": "apps/booking/booking-mobile/src/environments/environment.prod.ts"
+                },
+                {
+                  "replace": "libs/booking/feature-flight-search/src/lib/flight-search/flight-search.component.html",
+                  "with": "libs/booking/feature-flight-search/src/lib/flight-search/flight-search.mobile.component.html"
                 }
               ],
               "optimization": true,
