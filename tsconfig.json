@@ -38,6 +38,9 @@
       ],
       "@nrwl-airlines/booking/feature-flight-search": [
         "libs/booking/feature-flight-search/src/index.ts"
+      ],
+      "@nrwl-airlines/check-in/data-access": [
+        "libs/check-in/data-access/src/index.ts"
       ]
     }
   },
