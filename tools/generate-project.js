@@ -266,7 +266,7 @@ const argv = yargs
   .command({
     command: 'application <name>',
     description: 'Generate application',
-    aliases: ['app'],
+    aliases: ['app', 'a'],
     builder: yargs => {
       yargs.positional('name', {
         description: 'Application name, for example "booking-desktop" or '
@@ -301,7 +301,7 @@ const argv = yargs
   .command({
     command: 'library <type> [name]',
     description: 'Generate workspace library',
-    aliases: ['lib'],
+    aliases: ['lib', 'l'],
     builder: yargs => {
       yargs.positional('type', {
         description:
