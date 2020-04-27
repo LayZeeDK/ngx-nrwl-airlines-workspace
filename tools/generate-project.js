@@ -11,17 +11,36 @@ function cleanUpLibraryProjectFiles({
   execSync(`npx rimraf libs/${scope}/${name}/src/lib/*.*`);
 }
 
-function configureArchitects({
+function configureApplicationArchitects({
   name,
-  scope,
+  pathPrefix,
 }) {
-  execSync('npx json -I -f angular.json '
-    + `-e "delete this.projects['${scope}-${name}'].architect.build"`);
+  execSync(`ng config projects["${name}-e2e"].root ${pathPrefix}${name}-e2e`);
+  execSync(`ng config projects["${name}-e2e"].architect.lint.options.tsConfig `
+    + `${pathPrefix}${name}-e2e/tsconfig.json`);
+  execSync(`npx json -I -f angular.json -e `
+    + `"delete this.projects['${name}'].architect.e2e"`);
+  execSync(`npx json -I -f angular.json -e `
+    + `"this.projects['${name}'].architect.lint.options.tsConfig.pop()"`);
+  execSync(`ng config projects["${name}"].architect.lint.options.exclude[1] `
+    + `!${pathPrefix}${name}/**`);
+  execSync(`npx json -I -f angular.json -e `
+    + `"delete this.projects['${name}-e2e'].architect.build"`);
+  execSync(`npx json -I -f angular.json -e `
+    + `"delete this.projects['${name}-e2e'].architect['extract-i18n']"`);
+  execSync(`npx json -I -f angular.json -e `
+    + `"delete this.projects['${name}-e2e'].architect.serve"`);
+  execSync(`npx json -I -f angular.json -e `
+    + `"delete this.projects['${name}-e2e'].architect.test"`);
+  execSync(`npx json -I -f angular.json -e `
+    + `"delete this.projects['${name}-e2e'].prefix"`);
+  execSync(`npx json -I -f angular.json -e `
+    + `"delete this.projects['${name}-e2e'].sourceRoot"`);
+  execSync(`npx json -I -f angular.json -e `
+    + `"delete this.projects['${name}-e2e'].schematics"`);
   execSync(
-    `ng config projects["${scope}-${name}"].architect.lint.options.exclude[1] `
-    + `!libs/${scope}/${name}/**`);
-  execSync(`npx json -I -f libs/${scope}/${name}/tslint.json `
-    + `-e "this.linterOptions = { exclude: ['!**/*'] }"`);
+    `ng config projects["${name}-e2e"].architect.lint.options.exclude[1] `
+    + `!${pathPrefix}${name}-e2e/**`);
 }
 
 function configureKarmaConfig({
@@ -46,6 +65,19 @@ module.exports = (config) => {
   fs.writeFileSync(`${cwd}/libs/${scope}/${name}/karma.conf.js`, karmaConfig);
 }
 
+function configureLibraryArchitect({
+  name,
+  scope,
+}) {
+  execSync('npx json -I -f angular.json '
+    + `-e "delete this.projects['${scope}-${name}'].architect.build"`);
+  execSync(
+    `ng config projects["${scope}-${name}"].architect.lint.options.exclude[1] `
+    + `!libs/${scope}/${name}/**`);
+  execSync(`npx json -I -f libs/${scope}/${name}/tslint.json `
+    + `-e "this.linterOptions = { exclude: ['!**/*'] }"`);
+}
+
 function configurePathMapping({
   name,
   npmScope,
@@ -62,6 +94,56 @@ function execSync(command) {
   return childProcess.execSync(command, {
     stdio: 'inherit',
   });
+}
+
+function extractEndToEndTestingProject({
+  name,
+  pathPrefix,
+}) {
+  moveDirectory({
+    from: `${pathPrefix}${name}/e2e`,
+    to: `${pathPrefix}${name}-e2e`,
+  });
+  execSync(`npx json -I -f ${pathPrefix}${name}-e2e/tsconfig.json -e `
+    + `"this.extends = '../../../tsconfig.json'"`);
+  execSync(`npx json -I -f ${pathPrefix}${name}-e2e/tsconfig.json -e `
+    + `"this.compilerOptions.outDir = '../../../out-tsc/e2e'"`);
+  execSync(
+    `ng config projects["${name}"].architect.e2e.options.protractorConfig `
+    + `${pathPrefix}${name}-e2e/protractor.conf.js`);
+  execSync(`npx json -I -f angular.json -e `
+    + `"this.projects['${name}-e2e'] = this.projects['${name}']"`);
+}
+
+function generateApplication({
+  groupingFolder,
+  name,
+  scope,
+}) {
+  const pathPrefix = ['apps', groupingFolder].join('/') + '/'
+
+  generateApplicationProject({
+    name,
+    pathPrefix,
+    scope,
+  });
+  extractEndToEndTestingProject({
+    name,
+    pathPrefix,
+  });
+  configureApplicationArchitects({
+    name,
+    pathPrefix,
+  });
+}
+
+function generateApplicationProject({
+  name,
+  pathPrefix,
+  scope,
+}) {
+  execSync(`ng generate application ${name} --prefix=${scope} `
+    + `--project-root=${pathPrefix}${name} --style=css --routing=false`);
 }
 
 function generateLibraryFiles({
@@ -136,11 +218,19 @@ function generateWorkspaceLibrary({
 }) {
   generateLibraryProject({ name, npmScope, scope });
   renameLibraryProject({ name, scope });
-  configureArchitects({ name, scope });
+  configureLibraryArchitect({ name, scope });
   cleanUpLibraryProjectFiles({ name, scope });
   generateLibraryFiles({ name, scope, type });
   configurePathMapping({ name, npmScope, scope });
   configureKarmaConfig({ name, scope });
+}
+
+function moveDirectory({
+  from,
+  to,
+}) {
+  execSync(`npx copy ${from}/**/* ${to}`);
+  execSync(`npx rimraf ${from}`)
 }
 
 function renameLibraryProject({
@@ -163,7 +253,8 @@ const cwd = process.cwd();
 
 if (!fs.existsSync(`${cwd}/angular.json`)) {
   console.error(
-    'ERROR: Must be run from the workspace root folder that contains angular.json.');
+    'ERROR: Must be run from the workspace root folder that contains '
+    + 'angular.json.');
 
   process.exit(1);
 }
@@ -172,9 +263,46 @@ const defaultScope = 'shared';
 const argv = yargs
   .scriptName('generate-project')
   .usage('Usage: $0 <command> <args>')
-  .command(
-    'library <type> [name]', 'Generate workspace library',
-    yargs => {
+  .command({
+    command: 'application <name>',
+    description: 'Generate application',
+    aliases: ['app'],
+    builder: yargs => {
+      yargs.positional('name', {
+        description: 'Application name, for example "booking-desktop" or '
+          + '"check-in-mobile"',
+        type: 'string',
+      });
+      yargs.option('grouping-folder', {
+        default: '',
+        description: 'Name of application grouping folder, for example '
+          + '"booking" or "check-in"',
+        type: 'string',
+      });
+    },
+    handler: _argv => {
+      setImmediate(() => {
+        if (scope === 'shared') {
+          console.error(
+            'ERROR: "scope" parameter cannot be "shared" for application '
+            + 'projects');
+
+          process.exit(1);
+        }
+
+        generateApplication({
+          groupingFolder,
+          name,
+          scope,
+        });
+      });
+    },
+  })
+  .command({
+    command: 'library <type> [name]',
+    description: 'Generate workspace library',
+    aliases: ['lib'],
+    builder: yargs => {
       yargs.positional('type', {
         description:
           'The library type, for example "data-access", "feature", or "ui"',
@@ -185,7 +313,7 @@ const argv = yargs
         type: 'string',
       });
     },
-    _argv => {
+    handler: _argv => {
       setImmediate(() => {
         generateWorkspaceLibrary({
           name,
@@ -194,12 +322,13 @@ const argv = yargs
           type,
         });
       });
-    })
+    },
+  })
   .option('scope', {
     alias: 's',
     default: defaultScope,
     description:
-      'Library scope, for example "shared", "booking", or "check-in"',
+      'Project scope, for example "shared", "booking", or "check-in"',
     type: 'string',
   })
   .option('npm-scope', {
@@ -213,4 +342,4 @@ const argv = yargs
   .help().alias('help', 'h')
   .version('1.0.0').alias('version', 'v')
   .argv;
-const { npmScope, scope, type, name = type } = argv;
+const { groupingFolder, npmScope, scope, type, name = type } = argv;
