@@ -207,27 +207,29 @@ function generateLibraryComponent({
     `${cwd}/libs/${scope}/${name}/src/lib/${componentName}/${componentName}.component.html`,
     shellComponentTemplate);
 
+  const shellComponentClassName = toPascalCase(`${componentName}-component`);
+  const featureShellModuleClassName = toPascalCase(`${scope}-${name}-module`);
   const featureShellModule = `import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
-import { ShellComponent } from './shell/shell.component';
+import { ${shellComponentClassName} } from './${componentName}/${componentName}.component';
 
 const routes: Routes = [
   {
     path: '',
-    component: ShellComponent,
+    component: ${shellComponentClassName},
     children: [],
   },
 ];
 
 @NgModule({
-  declarations: [ShellComponent],
+  declarations: [${shellComponentClassName}],
   exports: [RouterModule],
   imports: [
     RouterModule.forRoot(routes),
   ],
 })
-export class BookingFeatureShellModule {}
+export class ${featureShellModuleClassName} {}
 `;
 
   fs.writeFileSync(
