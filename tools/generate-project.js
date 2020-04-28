@@ -170,6 +170,41 @@ function generateLibraryComponent({ name, scope }) {
     shellComponentTemplate);
 
   const shellComponentClassName = toPascalCase(`${componentName}-component`);
+  const shellComponentSpec = `import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterModule } from '@angular/router';
+
+import { ${shellComponentClassName} } from './${componentName}.component';
+
+describe('${shellComponentClassName}', () => {
+  let component: ${shellComponentClassName};
+  let fixture: ComponentFixture<${shellComponentClassName}>;
+
+  beforeEach(async () => {
+    TestBed.configureTestingModule({
+      declarations: [${shellComponentClassName}],
+      imports: [
+        RouterModule.forRoot([]),
+      ],
+    });
+    await TestBed.compileComponents();
+  });
+
+  beforeEach(() => {
+    fixture = TestBed.createComponent(${shellComponentClassName});
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
+`;
+
+  fs.writeFileSync(
+    `${cwd}/libs/${scope}/${name}/src/lib/${componentName}/${componentName}.component.spec.ts`,
+    shellComponentSpec);
+
   const featureShellModuleClassName = toPascalCase(`${scope}-${name}-module`);
   const featureShellModule = `import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
