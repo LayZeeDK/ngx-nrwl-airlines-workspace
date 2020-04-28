@@ -2,19 +2,13 @@ const childProcess = require('child_process');
 const fs = require('fs');
 const yargs = require('yargs');
 
-function cleanUpDefaultLibraryFiles({
-  name,
-  scope,
-}) {
+function cleanUpDefaultLibraryFiles({ name, scope }) {
   execSync(`npx rimraf libs/${scope}/${name}/*package.json`);
   execSync(`npx rimraf libs/${scope}/${name}/tsconfig.lib.prod.json`);
   execSync(`npx rimraf libs/${scope}/${name}/src/lib/*.*`);
 }
 
-function configureApplicationArchitects({
-  name,
-  pathPrefix,
-}) {
+function configureApplicationArchitects({ name, pathPrefix }) {
   execSync(`ng config projects["${name}-e2e"].root ${pathPrefix}${name}-e2e`);
   execSync(`ng config projects["${name}-e2e"].architect.lint.options.tsConfig `
     + `${pathPrefix}${name}-e2e/tsconfig.json`);
@@ -43,10 +37,7 @@ function configureApplicationArchitects({
     + `!${pathPrefix}${name}-e2e/**`);
 }
 
-function configureKarmaConfig({
-  name,
-  scope,
-}) {
+function configureKarmaConfig({ name, scope }) {
   const karmaConfig = `const path = require('path');
 
 const getBaseKarmaConfig = require('../../../karma.conf');
@@ -65,10 +56,7 @@ module.exports = (config) => {
   fs.writeFileSync(`${cwd}/libs/${scope}/${name}/karma.conf.js`, karmaConfig);
 }
 
-function configureLibraryArchitect({
-  name,
-  scope,
-}) {
+function configureLibraryArchitect({ name, scope }) {
   execSync('npx json -I -f angular.json '
     + `-e "delete this.projects['${scope}-${name}'].architect.build"`);
   execSync(
@@ -78,11 +66,7 @@ function configureLibraryArchitect({
     + `-e "this.linterOptions = { exclude: ['!**/*'] }"`);
 }
 
-function configurePathMapping({
-  name,
-  npmScope,
-  scope,
-}) {
+function configurePathMapping({ name, npmScope, scope }) {
   execSync(`npx json -I -f tsconfig.json -e `
     + `"delete this.compilerOptions.paths['${name}']"`);
   execSync(`npx json -I -f tsconfig.json `
@@ -96,10 +80,7 @@ function execSync(command) {
   });
 }
 
-function extractEndToEndTestingProject({
-  name,
-  pathPrefix,
-}) {
+function extractEndToEndTestingProject({ name, pathPrefix }) {
   moveDirectory({
     from: `${pathPrefix}${name}/e2e`,
     to: `${pathPrefix}${name}-e2e`,
@@ -115,11 +96,7 @@ function extractEndToEndTestingProject({
     + `"this.projects['${name}-e2e'] = this.projects['${name}']"`);
 }
 
-function generateApplication({
-  groupingFolder,
-  name,
-  scope,
-}) {
+function generateApplication({ groupingFolder, name, scope }) {
   const pathPrefix = ['apps', groupingFolder].join('/') + '/'
 
   generateApplicationProject({
@@ -137,11 +114,7 @@ function generateApplication({
   });
 }
 
-function generateApplicationProject({
-  name,
-  pathPrefix,
-  scope,
-}) {
+function generateApplicationProject({ name, pathPrefix, scope }) {
   execSync(`ng generate application ${name} --prefix=${scope} `
     + `--project-root=${pathPrefix}${name} --style=css --routing=false`);
 }
@@ -156,11 +129,7 @@ function generateFeatureState({
     + '--creators=true --api=false');
 }
 
-function generateLibraryAngularModule({
-  isPresentationLayer,
-  name,
-  scope,
-}) {
+function generateLibraryAngularModule({ isPresentationLayer, name, scope }) {
   execSync(`ng generate module ${scope}-${name} --project=${scope}-${name} `
     + `--flat ${isPresentationLayer ? '' : '--no-common-module'}`);
   const moduleName = toPascalCase(`${scope}-${name}-module`);
@@ -186,10 +155,7 @@ describe('${moduleName}', () => {
     moduleSpec);
 }
 
-function generateLibraryComponent({
-  name,
-  scope,
-}) {
+function generateLibraryComponent({ name, scope }) {
   const isFeatureShell = name.endsWith('feature-shell');
   const componentName = isFeatureShell ? 'shell' : name.replace(/^.*?-/, '');
 
@@ -237,11 +203,7 @@ export class ${featureShellModuleClassName} {}
     featureShellModule);
 }
 
-function generateLibraryProject({
-  name,
-  npmScope,
-  scope,
-}) {
+function generateLibraryProject({ name, npmScope, scope }) {
   const prefix =
     (scope === defaultScope)
       ? npmScope
@@ -252,10 +214,7 @@ function generateLibraryProject({
     + '--entry-file=index --skip-install --skip-package-json');
 }
 
-function generateLibraryPublicApi({
-  name,
-  scope,
-}) {
+function generateLibraryPublicApi({ name, scope }) {
   const publicApi = `/*
 * Public API Surface of ${scope}-${name}
 */
@@ -266,12 +225,7 @@ export * from './lib/${scope}-${name}.module';
   fs.writeFileSync(`${cwd}/libs/${scope}/${name}/src/index.ts`, publicApi);
 }
 
-function generateWorkspaceLibrary({
-  name,
-  npmScope,
-  scope,
-  type,
-}) {
+function generateWorkspaceLibrary({ name, npmScope, scope, type }) {
   const isDataAccess = type === 'data-access';
   const isPresentationLayer = ['feature', 'ui'].includes(type);
 
@@ -286,36 +240,24 @@ function generateWorkspaceLibrary({
   });
 
   if (isPresentationLayer) {
-    generateLibraryComponent({
-      name,
-      scope,
-    });
+    generateLibraryComponent({ name, scope });
   }
 
   if (isDataAccess && withState) {
     generateFeatureState({ name, scope });
   }
 
-  generateLibraryPublicApi({
-    name,
-    scope,
-  });
+  generateLibraryPublicApi({ name, scope });
   configurePathMapping({ name, npmScope, scope });
   configureKarmaConfig({ name, scope });
 }
 
-function moveDirectory({
-  from,
-  to,
-}) {
+function moveDirectory({ from, to }) {
   execSync(`npx copy ${from}/**/* ${to}`);
   execSync(`npx rimraf ${from}`)
 }
 
-function renameLibraryProject({
-  name,
-  scope,
-}) {
+function renameLibraryProject({ name, scope }) {
   execSync('npx json -I -f angular.json '
     + `-e "this.projects['${scope}-${name}'] = this.projects['${name}']"`);
   execSync(`npx json -I -f angular.json -e "delete this.projects['${name}']"`);
