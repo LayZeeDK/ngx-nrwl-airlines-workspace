@@ -41,6 +41,9 @@
       ],
       "@nrwl-airlines/check-in/data-access": [
         "libs/check-in/data-access/src/index.ts"
+      ],
+      "@nrwl-airlines/check-in/feature-shell": [
+        "libs/check-in/feature-shell/src/index.ts"
       ]
     }
   },

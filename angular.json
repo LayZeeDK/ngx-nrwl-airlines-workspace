@@ -481,6 +481,35 @@
           }
         }
       }
+    },
+    "check-in-feature-shell": {
+      "projectType": "library",
+      "root": "libs/check-in/feature-shell",
+      "sourceRoot": "libs/check-in/feature-shell/src",
+      "prefix": "check-in",
+      "architect": {
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "libs/check-in/feature-shell/src/test.ts",
+            "tsConfig": "libs/check-in/feature-shell/tsconfig.spec.json",
+            "karmaConfig": "libs/check-in/feature-shell/karma.conf.js"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "libs/check-in/feature-shell/tsconfig.lib.json",
+              "libs/check-in/feature-shell/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**",
+              "!libs/check-in/feature-shell/**"
+            ]
+          }
+        }
+      }
     }
   },
   "defaultProject": "booking-desktop"
