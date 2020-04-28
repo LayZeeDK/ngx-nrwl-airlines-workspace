@@ -146,6 +146,16 @@ function generateApplicationProject({
     + `--project-root=${pathPrefix}${name} --style=css --routing=false`);
 }
 
+function generateFeatureState({
+  name,
+  scope,
+}) {
+  execSync(
+    `ng generate @ngrx/schematics:feature +state/${scope} `
+    + `--project=${scope}-${name} --module=${scope}-${name}.module.ts `
+    + '--creators=true --api=false');
+}
+
 function generateLibraryFiles({
   name,
   scope,
@@ -153,6 +163,30 @@ function generateLibraryFiles({
 }) {
   const isPresentationLayer = ['feature', 'ui'].includes(type);
 
+  generateLibraryAngularModule({
+    isPresentationLayer,
+    name,
+    scope,
+  });
+
+  if (isPresentationLayer) {
+    generateLibraryComponent({
+      name,
+      scope,
+    });
+  }
+
+  generateLibraryPublicApi({
+    name,
+    scope,
+  });
+}
+
+function generateLibraryAngularModule({
+  isPresentationLayer,
+  name,
+  scope,
+}) {
   execSync(`ng generate module ${scope}-${name} --project=${scope}-${name} `
     + `--flat ${isPresentationLayer ? '' : '--no-common-module'}`);
   const moduleName = toPascalCase(`${scope}-${name}-module`);
@@ -176,23 +210,55 @@ describe('${moduleName}', () => {
   fs.writeFileSync(
     `${cwd}/libs/${scope}/${name}/src/lib/${scope}-${name}.module.spec.ts`,
     moduleSpec);
+}
 
+function generateLibraryComponent({
+  name,
+  scope,
+}) {
   const isFeatureShell = name.endsWith('feature-shell');
+  const componentName = isFeatureShell ? 'shell' : name.replace(/^.*?-/, '');
 
-  if (isPresentationLayer && !isFeatureShell) {
-    execSync(`ng generate component ${name.replace(/^.*?-/, '')} `
-      + `--project=${scope}-${name} --module=${scope}-${name}.module.ts `
-      + `--display-block`);
+  execSync(`ng generate component ${componentName} `
+    + `--project=${scope}-${name} --module=${scope}-${name}.module.ts `
+    + `--display-block`);
+
+  if (!isFeatureShell) {
+    return;
   }
 
-  const publicApi = `/*
-* Public API Surface of ${scope}-${name}
-*/
+  const shellComponentTemplate = '<router-outlet></router-outlet>';
 
-export * from './lib/${scope}-${name}.module';
+  fs.writeFileSync(
+    `${cwd}/libs/${scope}/${name}/src/lib/${componentName}/${componentName}.component.html`,
+    shellComponentTemplate);
+
+  const featureShellModule = `import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+
+import { ShellComponent } from './shell/shell.component';
+
+const routes: Routes = [
+  {
+    path: '',
+    component: ShellComponent,
+    children: [],
+  },
+];
+
+@NgModule({
+  declarations: [ShellComponent],
+  exports: [RouterModule],
+  imports: [
+    RouterModule.forRoot(routes),
+  ],
+})
+export class BookingFeatureShellModule {}
 `;
 
-  fs.writeFileSync(`${cwd}/libs/${scope}/${name}/src/index.ts`, publicApi);
+  fs.writeFileSync(
+    `${cwd}/libs/${scope}/${name}/src/lib/${scope}-${name}.module.ts`,
+    featureShellModule);
 }
 
 function generateLibraryProject({
@@ -210,14 +276,18 @@ function generateLibraryProject({
     + '--entry-file=index --skip-install --skip-package-json');
 }
 
-function generateFeatureState({
+function generateLibraryPublicApi({
   name,
   scope,
 }) {
-  execSync(
-    `ng generate @ngrx/schematics:feature +state/${scope} `
-    + `--project=${scope}-${name} --module=${scope}-${name}.module.ts `
-    + '--creators=true --api=false');
+  const publicApi = `/*
+* Public API Surface of ${scope}-${name}
+*/
+
+export * from './lib/${scope}-${name}.module';
+`;
+
+  fs.writeFileSync(`${cwd}/libs/${scope}/${name}/src/index.ts`, publicApi);
 }
 
 function generateWorkspaceLibrary({
