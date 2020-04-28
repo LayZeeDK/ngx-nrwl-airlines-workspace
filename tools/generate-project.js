@@ -2,7 +2,7 @@ const childProcess = require('child_process');
 const fs = require('fs');
 const yargs = require('yargs');
 
-function cleanUpLibraryProjectFiles({
+function cleanUpDefaultLibraryFiles({
   name,
   scope,
 }) {
@@ -156,32 +156,6 @@ function generateFeatureState({
     + '--creators=true --api=false');
 }
 
-function generateLibraryFiles({
-  name,
-  scope,
-  type,
-}) {
-  const isPresentationLayer = ['feature', 'ui'].includes(type);
-
-  generateLibraryAngularModule({
-    isPresentationLayer,
-    name,
-    scope,
-  });
-
-  if (isPresentationLayer) {
-    generateLibraryComponent({
-      name,
-      scope,
-    });
-  }
-
-  generateLibraryPublicApi({
-    name,
-    scope,
-  });
-}
-
 function generateLibraryAngularModule({
   isPresentationLayer,
   name,
@@ -297,18 +271,35 @@ function generateWorkspaceLibrary({
   type,
 }) {
   const isDataAccess = type === 'data-access';
+  const isPresentationLayer = ['feature', 'ui'].includes(type);
 
   generateLibraryProject({ name, npmScope, scope });
   renameLibraryProject({ name, scope });
   configureLibraryArchitect({ name, scope });
-  cleanUpLibraryProjectFiles({ name, scope });
-  generateLibraryFiles({ name, scope, type });
-  configurePathMapping({ name, npmScope, scope });
-  configureKarmaConfig({ name, scope });
+  cleanUpDefaultLibraryFiles({ name, scope });
+  generateLibraryAngularModule({
+    isPresentationLayer,
+    name,
+    scope,
+  });
+
+  if (isPresentationLayer) {
+    generateLibraryComponent({
+      name,
+      scope,
+    });
+  }
 
   if (isDataAccess && withState) {
     generateFeatureState({ name, scope });
   }
+
+  generateLibraryPublicApi({
+    name,
+    scope,
+  });
+  configurePathMapping({ name, npmScope, scope });
+  configureKarmaConfig({ name, scope });
 }
 
 function moveDirectory({
