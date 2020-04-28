@@ -37,8 +37,12 @@ function configureApplicationArchitects({ name, pathPrefix }) {
     + `!${pathPrefix}${name}-e2e/**`);
 }
 
-function configureKarmaConfig({ name, groupingFolder, projectRoot }) {
-  const pathSuffix = [projectRoot, groupingFolder, name].join('/')
+function configureKarmaConfig({ name, groupingFolder, projectRoot, scope }) {
+  if (scope === groupingFolder) {
+    groupingFolder = '';
+  }
+
+  const pathSuffix = [projectRoot, scope, groupingFolder, name].join('/')
   const karmaConfig = `const path = require('path');
 
 const getBaseKarmaConfig = require('../../../karma.conf');
