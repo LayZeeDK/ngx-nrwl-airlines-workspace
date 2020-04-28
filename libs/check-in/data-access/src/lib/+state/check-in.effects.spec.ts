@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideMockActions } from '@ngrx/effects/testing';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 
 import { CheckInEffects } from './check-in.effects';
 
@@ -16,10 +16,14 @@ describe('CheckInEffects', () => {
       ]
     });
 
-    effects = TestBed.get<CheckInEffects>(CheckInEffects);
+    effects = TestBed.inject<CheckInEffects>(CheckInEffects);
   });
 
   it('should be created', () => {
     expect(effects).toBeTruthy();
+  });
+
+  it('has an action', () => {
+    actions$ = of({ type: 'Action One' });
   });
 });
