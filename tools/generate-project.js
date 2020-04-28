@@ -37,7 +37,8 @@ function configureApplicationArchitects({ name, pathPrefix }) {
     + `!${pathPrefix}${name}-e2e/**`);
 }
 
-function configureKarmaConfig({ name, scope }) {
+function configureKarmaConfig({ name, groupingFolder, projectRoot, scope }) {
+  const pathSuffix = [projectRoot, scope, groupingFolder, name].join('/')
   const karmaConfig = `const path = require('path');
 
 const getBaseKarmaConfig = require('../../../karma.conf');
@@ -48,12 +49,12 @@ module.exports = (config) => {
     ...baseConfig,
     coverageIstanbulReporter: {
       ...baseConfig.coverageIstanbulReporter,
-      dir: path.join(__dirname, '../../../coverage/libs/${scope}/${name}'),
+      dir: path.join(__dirname, '../../../coverage/${pathSuffix}'),
     },
   });
 };
 `;
-  fs.writeFileSync(`${cwd}/libs/${scope}/${name}/karma.conf.js`, karmaConfig);
+  fs.writeFileSync(`${cwd}/${pathSuffix}/karma.conf.js`, karmaConfig);
 }
 
 function configureLibraryArchitect({ name, scope }) {
@@ -99,19 +100,10 @@ function extractEndToEndTestingProject({ name, pathPrefix }) {
 function generateApplication({ groupingFolder, name, scope }) {
   const pathPrefix = ['apps', groupingFolder].join('/') + '/'
 
-  generateApplicationProject({
-    name,
-    pathPrefix,
-    scope,
-  });
-  extractEndToEndTestingProject({
-    name,
-    pathPrefix,
-  });
-  configureApplicationArchitects({
-    name,
-    pathPrefix,
-  });
+  generateApplicationProject({ name, pathPrefix, scope });
+  extractEndToEndTestingProject({ name, pathPrefix });
+  configureApplicationArchitects({ name, pathPrefix });
+  configureKarmaConfig({ groupingFolder, name, projectRoot: 'apps', scope });
 }
 
 function generateApplicationProject({ name, pathPrefix, scope }) {
@@ -225,7 +217,7 @@ export * from './lib/${scope}-${name}.module';
   fs.writeFileSync(`${cwd}/libs/${scope}/${name}/src/index.ts`, publicApi);
 }
 
-function generateWorkspaceLibrary({ name, npmScope, scope, type }) {
+function generateWorkspaceLibrary({ groupingFolder, name, npmScope, scope, type }) {
   const isDataAccess = type === 'data-access';
   const isPresentationLayer = ['feature', 'ui'].includes(type);
 
@@ -249,7 +241,7 @@ function generateWorkspaceLibrary({ name, npmScope, scope, type }) {
 
   generateLibraryPublicApi({ name, scope });
   configurePathMapping({ name, npmScope, scope });
-  configureKarmaConfig({ name, scope });
+  configureKarmaConfig({ groupingFolder, name, projectRoot: 'libs', scope });
 }
 
 function moveDirectory({ from, to }) {
@@ -311,11 +303,7 @@ const argv = yargs
           process.exit(1);
         }
 
-        generateApplication({
-          groupingFolder,
-          name,
-          scope,
-        });
+        generateApplication({ groupingFolder, name, scope });
       });
     },
   })
@@ -342,6 +330,7 @@ const argv = yargs
     handler: _argv => {
       setImmediate(() => {
         generateWorkspaceLibrary({
+          groupingFolder,
           name,
           npmScope,
           scope,
