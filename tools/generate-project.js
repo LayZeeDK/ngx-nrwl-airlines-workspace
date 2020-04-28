@@ -37,8 +37,8 @@ function configureApplicationArchitects({ name, pathPrefix }) {
     + `!${pathPrefix}${name}-e2e/**`);
 }
 
-function configureKarmaConfig({ name, groupingFolder, projectRoot, scope }) {
-  const pathSuffix = [projectRoot, scope, groupingFolder, name].join('/')
+function configureKarmaConfig({ name, groupingFolder, projectRoot }) {
+  const pathSuffix = [projectRoot, groupingFolder, name].join('/')
   const karmaConfig = `const path = require('path');
 
 const getBaseKarmaConfig = require('../../../karma.conf');
@@ -319,6 +319,11 @@ const argv = yargs
       });
       yargs.positional('name', {
         description: 'Library name, for example "feature-shell"',
+        type: 'string',
+      });
+      yargs.option('grouping-folder', {
+        default: '',
+        description: 'Name of library grouping folder, for example "seatmap"',
         type: 'string',
       });
       yargs.option('with-state', {
