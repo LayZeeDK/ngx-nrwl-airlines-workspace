@@ -8,6 +8,21 @@ function addScopeToLibraryProjectName({ name, scope }) {
   runCommand(`npx json -I -f angular.json -e "delete this.projects['${name}']"`);
 }
 
+function appComponentWithFeatureShellTemplate() {
+  return `<h1>
+  {{title}}
+</h1>
+
+<router-outlet></router-outlet>
+`;
+}
+
+function appFolderPath({ groupingFolder, name }) {
+  return ['apps', groupingFolder, name, 'src', 'app']
+    .filter(x => !!x)
+    .join('/');
+}
+
 function cleanUpDefaultLibraryFiles({ name, scope }) {
   runCommand(`npx rimraf libs/${scope}/${name}/*package.json`);
   runCommand(`npx rimraf libs/${scope}/${name}/tsconfig.lib.prod.json`);
@@ -101,6 +116,34 @@ function extractEndToEndTestingProject({ name, pathPrefix }) {
     + `"this.projects['${name}-e2e'] = this.projects['${name}']"`);
 }
 
+function importRouterModuleInAppComponentSpec({ groupingFolder, name }) {
+  const filePath =
+    `${appFolderPath({ groupingFolder, name })}/app.component.spec.ts`;
+
+  const importsSearch = /declarations:\s*\[\s*AppComponent\s*\],/;
+  const importsReplacement = `declarations: [AppComponent],
+      imports: [
+        RouterModule.forRoot([]),
+      ],`
+
+  searchAndReplaceInFile({
+    filePath,
+    replacement: importsReplacement,
+    search: importsSearch,
+  });
+
+  const componentImportSearch = "import { AppComponent } from './app.component';";
+  const componentImportReplacement = `import { RouterModule } from '@angular/router';
+
+import { AppComponent } from './app.component';`;
+
+  searchAndReplaceInFile({
+    filePath,
+    replacement: componentImportReplacement,
+    search: componentImportSearch,
+  });
+}
+
 function featureShellModule({ componentName, name, scope }) {
   const featureShellModuleClassName = toPascalCase(`${scope}-${name}-module`);
 
@@ -131,23 +174,26 @@ export class ${featureShellModuleClassName} {}
 function generateApplication({ groupingFolder, name, npmScope, scope }) {
   const projectRoot = 'apps';
   const pathPrefix = [projectRoot, groupingFolder].join('/') + '/'
-  const maybeSharedEnvironmentsLibraryName =
-    readMaybeSharedEnvironmentsLibraryName({ scope });
-  const hasSharedEnvironmentsLibary =
-    maybeSharedEnvironmentsLibraryName !== undefined;
 
   generateApplicationProject({ name, pathPrefix, scope });
 
-  if (hasSharedEnvironmentsLibary) {
+  if (hasSharedEnvironmentsLibary({ scope })) {
+    const sharedEnvironmentsLibraryName =
+      readMaybeSharedEnvironmentsLibraryName({ scope });
+
     useSharedEnvironmentsLibraryInMainFile({
       groupingFolder,
       name,
       npmScope,
       projectRoot,
-      sharedEnvironmentsLibraryName: maybeSharedEnvironmentsLibraryName,
+      sharedEnvironmentsLibraryName,
     });
   }
-  // setAppComponentTemplate({ name });
+
+  if (hasFeatureShellLibrary({ scope })) {
+    useFeatureShell({ groupingFolder, name, scope });
+  }
+
   extractEndToEndTestingProject({ name, pathPrefix });
   configureApplicationArchitects({ name, pathPrefix });
   configureKarmaConfig({ groupingFolder, name, projectRoot, scope });
@@ -241,6 +287,22 @@ function generateWorkspaceLibrary({ groupingFolder, name, npmScope, scope, type 
   configureKarmaConfig({ groupingFolder, name, projectRoot: 'libs', scope });
 }
 
+function hasFeatureShellLibrary({ scope }) {
+  return Object.keys(readAngularJson().projects).find(projectName =>
+    projectName === `${scope}-feature-shell`)
+    !== undefined;
+}
+
+function hasSharedEnvironmentsLibary({ scope }) {
+  return readMaybeSharedEnvironmentsLibraryName({ scope }) !== undefined;
+}
+
+function libraryImportPath({ groupingFolder, npmScope, scope, name }) {
+  return [`@${npmScope}`, scope, groupingFolder, name]
+    .filter(x => !!x)
+    .join('/');
+}
+
 function libraryModuleSpec({ name, scope }) {
   const moduleName = toPascalCase(`${scope}-${name}-module`);
 
@@ -305,6 +367,12 @@ function searchAndReplaceInFile({ filePath, search, replacement }) {
   writeFile(filePath, fileContent.replace(search, replacement));
 }
 
+function setAppComponentTemplateToTitleAndRouterOutlet({ groupingFolder, name }) {
+  writeFile(
+    `${appFolderPath({ groupingFolder, name })}/app.component.html`,
+    appComponentWithFeatureShellTemplate());
+}
+
 function shellComponentSpec({ componentName }) {
   const shellComponentClassName = toPascalCase(`${componentName}-component`);
 
@@ -349,6 +417,51 @@ function toPascalCase(kebabCase) {
     .split('-')
     .map(part => part.charAt(0).toUpperCase() + part.slice(1))
     .join('');
+}
+
+function importFeatureShellModuleInAppModule({ groupingFolder, name, scope }) {
+  const filePath = `${appFolderPath({ groupingFolder, name })}/app.module.ts`;
+
+  const importsSearch = `imports: [
+    BrowserModule
+  ],`;
+  const featureShellModuleClassName =
+    toPascalCase(`${scope}-feature-shell-module`);
+  const importsReplacement = `imports: [
+    BrowserModule,
+    ${featureShellModuleClassName},
+  ],`;
+
+  searchAndReplaceInFile({
+    filePath,
+    replacement: importsReplacement,
+    search: importsSearch,
+  });
+
+  const componentImportSearch =
+    "import { AppComponent } from './app.component';";
+  const featureShellLibraryImportPath = libraryImportPath({
+    npmScope,
+    scope,
+    name: 'feature-shell',
+  });
+  const componentImportReplacement = `import {
+  ${featureShellModuleClassName},
+} from '${featureShellLibraryImportPath}';
+
+${componentImportSearch}`;
+
+  searchAndReplaceInFile({
+    filePath,
+    replacement: componentImportReplacement,
+    search: componentImportSearch,
+  });
+}
+
+function useFeatureShell({ groupingFolder, name, scope }) {
+  setAppComponentTemplateToTitleAndRouterOutlet({ groupingFolder, name });
+  importFeatureShellModuleInAppModule({ groupingFolder, name, scope });
+  importRouterModuleInAppComponentSpec({ groupingFolder, name });
 }
 
 function useSharedEnvironmentsLibraryInMainFile({
