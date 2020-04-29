@@ -2,6 +2,12 @@ const childProcess = require('child_process');
 const fs = require('fs');
 const yargs = require('yargs');
 
+function addScopeToLibraryProjectName({ name, scope }) {
+  execSync('npx json -I -f angular.json '
+    + `-e "this.projects['${scope}-${name}'] = this.projects['${name}']"`);
+  execSync(`npx json -I -f angular.json -e "delete this.projects['${name}']"`);
+}
+
 function cleanUpDefaultLibraryFiles({ name, scope }) {
   execSync(`npx rimraf libs/${scope}/${name}/*package.json`);
   execSync(`npx rimraf libs/${scope}/${name}/tsconfig.lib.prod.json`);
@@ -101,6 +107,33 @@ function extractEndToEndTestingProject({ name, pathPrefix }) {
     + `"this.projects['${name}-e2e'] = this.projects['${name}']"`);
 }
 
+function featureShellModule({ componentName, name, scope }) {
+  const featureShellModuleClassName = toPascalCase(`${scope}-${name}-module`);
+
+  return `import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+
+import { ${shellComponentClassName} } from './${componentName}/${componentName}.component';
+
+const routes: Routes = [
+  {
+    path: '',
+    component: ${shellComponentClassName},
+    children: [],
+  },
+];
+
+@NgModule({
+  declarations: [${shellComponentClassName}],
+  exports: [RouterModule],
+  imports: [
+    RouterModule.forRoot(routes),
+  ],
+})
+export class ${featureShellModuleClassName} {}
+`;
+}
+
 function generateApplication({ groupingFolder, name, scope }) {
   const pathPrefix = ['apps', groupingFolder].join('/') + '/'
 
@@ -115,10 +148,7 @@ function generateApplicationProject({ name, pathPrefix, scope }) {
     + `--project-root=${pathPrefix}${name} --style=css --routing=false`);
 }
 
-function generateFeatureState({
-  name,
-  scope,
-}) {
+function generateFeatureState({ name, scope }) {
   execSync(
     `ng generate @ngrx/schematics:feature +state/${scope} `
     + `--project=${scope}-${name} --module=${scope}-${name}.module.ts `
@@ -128,8 +158,83 @@ function generateFeatureState({
 function generateLibraryAngularModule({ isPresentationLayer, name, scope }) {
   execSync(`ng generate module ${scope}-${name} --project=${scope}-${name} `
     + `--flat ${isPresentationLayer ? '' : '--no-common-module'}`);
+
+  fs.writeFileSync(
+    `${cwd}/libs/${scope}/${name}/src/lib/${scope}-${name}.module.spec.ts`,
+    libraryModuleSpec({ name, scope }));
+}
+
+function generateLibraryComponent({ name, scope }) {
+  const isFeatureShell = name.endsWith('feature-shell');
+  const componentName = isFeatureShell ? 'shell' : name.replace(/^.*?-/, '');
+
+  execSync(`ng generate component ${componentName} `
+    + `--project=${scope}-${name} --module=${scope}-${name}.module.ts `
+    + `--display-block`);
+
+  if (!isFeatureShell) {
+    return;
+  }
+
+  fs.writeFileSync(
+    `${cwd}/libs/${scope}/${name}/src/lib/${componentName}/${componentName}.component.html`,
+    shellComponentTemplate());
+  fs.writeFileSync(
+    `${cwd}/libs/${scope}/${name}/src/lib/${componentName}/${componentName}.component.spec.ts`,
+    shellComponentSpec({ componentName }));
+  fs.writeFileSync(
+    `${cwd}/libs/${scope}/${name}/src/lib/${scope}-${name}.module.ts`,
+    featureShellModule({ componentName, name, scope }));
+}
+
+function generateLibraryProject({ name, npmScope, scope }) {
+  const prefix =
+    (scope === defaultScope)
+      ? npmScope
+      : scope;
+
+  execSync(`ng config newProjectRoot libs/${scope}`);
+  execSync(`ng generate library ${name} --prefix=${prefix} `
+    + '--entry-file=index --skip-install --skip-package-json');
+}
+
+function generateLibraryPublicApi({ name, scope }) {
+  fs.writeFileSync(
+    `${cwd}/libs/${scope}/${name}/src/index.ts`,
+    libraryPublicApi({ name, scope }));
+}
+
+function generateWorkspaceLibrary({ groupingFolder, name, npmScope, scope, type }) {
+  const isDataAccess = type === 'data-access';
+  const isPresentationLayer = ['feature', 'ui'].includes(type);
+
+  generateLibraryProject({ name, npmScope, scope });
+  addScopeToLibraryProjectName({ name, scope });
+  configureLibraryArchitect({ name, scope });
+  cleanUpDefaultLibraryFiles({ name, scope });
+  generateLibraryAngularModule({
+    isPresentationLayer,
+    name,
+    scope,
+  });
+
+  if (isPresentationLayer) {
+    generateLibraryComponent({ name, scope });
+  }
+
+  if (isDataAccess && withState) {
+    generateFeatureState({ name, scope });
+  }
+
+  generateLibraryPublicApi({ name, scope });
+  configurePathMapping({ name, npmScope, scope });
+  configureKarmaConfig({ groupingFolder, name, projectRoot: 'libs', scope });
+}
+
+function libraryModuleSpec({ name, scope }) {
   const moduleName = toPascalCase(`${scope}-${name}-module`);
-  const moduleSpec = `import { TestBed } from '@angular/core/testing';
+
+  return `import { TestBed } from '@angular/core/testing';
 
 import { ${moduleName} } from './${scope}-${name}.module';
 
@@ -146,31 +251,26 @@ describe('${moduleName}', () => {
   });
 });
 `;
-  fs.writeFileSync(
-    `${cwd}/libs/${scope}/${name}/src/lib/${scope}-${name}.module.spec.ts`,
-    moduleSpec);
 }
 
-function generateLibraryComponent({ name, scope }) {
-  const isFeatureShell = name.endsWith('feature-shell');
-  const componentName = isFeatureShell ? 'shell' : name.replace(/^.*?-/, '');
+function libraryPublicApi({ name, scope }) {
+  return `/*
+* Public API Surface of ${scope}-${name}
+*/
 
-  execSync(`ng generate component ${componentName} `
-    + `--project=${scope}-${name} --module=${scope}-${name}.module.ts `
-    + `--display-block`);
+export * from './lib/${scope}-${name}.module';
+`;
+}
 
-  if (!isFeatureShell) {
-    return;
-  }
+function moveDirectory({ from, to }) {
+  execSync(`npx copy ${from}/**/* ${to}`);
+  execSync(`npx rimraf ${from}`)
+}
 
-  const shellComponentTemplate = '<router-outlet></router-outlet>';
-
-  fs.writeFileSync(
-    `${cwd}/libs/${scope}/${name}/src/lib/${componentName}/${componentName}.component.html`,
-    shellComponentTemplate);
-
+function shellComponentSpec({ componentName }) {
   const shellComponentClassName = toPascalCase(`${componentName}-component`);
-  const shellComponentSpec = `import { ComponentFixture, TestBed } from '@angular/core/testing';
+
+  return `import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterModule } from '@angular/router';
 
 import { ${shellComponentClassName} } from './${componentName}.component';
@@ -200,98 +300,10 @@ describe('${shellComponentClassName}', () => {
   });
 });
 `;
-
-  fs.writeFileSync(
-    `${cwd}/libs/${scope}/${name}/src/lib/${componentName}/${componentName}.component.spec.ts`,
-    shellComponentSpec);
-
-  const featureShellModuleClassName = toPascalCase(`${scope}-${name}-module`);
-  const featureShellModule = `import { NgModule } from '@angular/core';
-import { RouterModule, Routes } from '@angular/router';
-
-import { ${shellComponentClassName} } from './${componentName}/${componentName}.component';
-
-const routes: Routes = [
-  {
-    path: '',
-    component: ${shellComponentClassName},
-    children: [],
-  },
-];
-
-@NgModule({
-  declarations: [${shellComponentClassName}],
-  exports: [RouterModule],
-  imports: [
-    RouterModule.forRoot(routes),
-  ],
-})
-export class ${featureShellModuleClassName} {}
-`;
-
-  fs.writeFileSync(
-    `${cwd}/libs/${scope}/${name}/src/lib/${scope}-${name}.module.ts`,
-    featureShellModule);
 }
 
-function generateLibraryProject({ name, npmScope, scope }) {
-  const prefix =
-    (scope === defaultScope)
-      ? npmScope
-      : scope;
-
-  execSync(`ng config newProjectRoot libs/${scope}`);
-  execSync(`ng generate library ${name} --prefix=${prefix} `
-    + '--entry-file=index --skip-install --skip-package-json');
-}
-
-function generateLibraryPublicApi({ name, scope }) {
-  const publicApi = `/*
-* Public API Surface of ${scope}-${name}
-*/
-
-export * from './lib/${scope}-${name}.module';
-`;
-
-  fs.writeFileSync(`${cwd}/libs/${scope}/${name}/src/index.ts`, publicApi);
-}
-
-function generateWorkspaceLibrary({ groupingFolder, name, npmScope, scope, type }) {
-  const isDataAccess = type === 'data-access';
-  const isPresentationLayer = ['feature', 'ui'].includes(type);
-
-  generateLibraryProject({ name, npmScope, scope });
-  renameLibraryProject({ name, scope });
-  configureLibraryArchitect({ name, scope });
-  cleanUpDefaultLibraryFiles({ name, scope });
-  generateLibraryAngularModule({
-    isPresentationLayer,
-    name,
-    scope,
-  });
-
-  if (isPresentationLayer) {
-    generateLibraryComponent({ name, scope });
-  }
-
-  if (isDataAccess && withState) {
-    generateFeatureState({ name, scope });
-  }
-
-  generateLibraryPublicApi({ name, scope });
-  configurePathMapping({ name, npmScope, scope });
-  configureKarmaConfig({ groupingFolder, name, projectRoot: 'libs', scope });
-}
-
-function moveDirectory({ from, to }) {
-  execSync(`npx copy ${from}/**/* ${to}`);
-  execSync(`npx rimraf ${from}`)
-}
-
-function renameLibraryProject({ name, scope }) {
-  execSync('npx json -I -f angular.json '
-    + `-e "this.projects['${scope}-${name}'] = this.projects['${name}']"`);
-  execSync(`npx json -I -f angular.json -e "delete this.projects['${name}']"`);
+function shellComponentTemplate() {
+  return '<router-outlet></router-outlet>';
 }
 
 function toPascalCase(kebabCase) {
