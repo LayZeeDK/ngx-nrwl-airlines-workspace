@@ -8,6 +8,20 @@ function addScopeToLibraryProjectName({ name, scope }) {
   runCommand(`npx json -I -f angular.json -e "delete this.projects['${name}']"`);
 }
 
+function adjustAppComponentSpecToAppComponentTemplate({
+  groupingFolder,
+  name,
+}) {
+  const filePath =
+    `${appFolderPath({ groupingFolder, name })}/app.component.spec.ts`;
+  const search =
+    "expect(compiled.querySelector('.content span').textContent).toContain('check-in-desktop app is running!');";
+  const replacement =
+    "expect(compiled.querySelector('h1').textContent).toContain('check-in-desktop');";
+
+  searchAndReplaceInFile({ filePath, replacement, search });
+}
+
 function appComponentWithFeatureShellTemplate() {
   return `<h1>
   {{title}}
@@ -114,6 +128,45 @@ function extractEndToEndTestingProject({ name, pathPrefix }) {
     + `${pathPrefix}${name}-e2e/protractor.conf.js`);
   runCommand(`npx json -I -f angular.json -e `
     + `"this.projects['${name}-e2e'] = this.projects['${name}']"`);
+}
+
+function importFeatureShellModuleInAppModule({ groupingFolder, name, scope }) {
+  const filePath = `${appFolderPath({ groupingFolder, name })}/app.module.ts`;
+
+  const importsSearch = `imports: [
+    BrowserModule
+  ],`;
+  const featureShellModuleClassName =
+    toPascalCase(`${scope}-feature-shell-module`);
+  const importsReplacement = `imports: [
+    BrowserModule,
+    ${featureShellModuleClassName},
+  ],`;
+
+  searchAndReplaceInFile({
+    filePath,
+    replacement: importsReplacement,
+    search: importsSearch,
+  });
+
+  const componentImportSearch =
+    "import { AppComponent } from './app.component';";
+  const featureShellLibraryImportPath = libraryImportPath({
+    npmScope,
+    scope,
+    name: 'feature-shell',
+  });
+  const componentImportReplacement = `import {
+  ${featureShellModuleClassName},
+} from '${featureShellLibraryImportPath}';
+
+${componentImportSearch}`;
+
+  searchAndReplaceInFile({
+    filePath,
+    replacement: componentImportReplacement,
+    search: componentImportSearch,
+  });
 }
 
 function importRouterModuleInAppComponentSpec({ groupingFolder, name }) {
@@ -417,59 +470,6 @@ function toPascalCase(kebabCase) {
     .split('-')
     .map(part => part.charAt(0).toUpperCase() + part.slice(1))
     .join('');
-}
-
-function importFeatureShellModuleInAppModule({ groupingFolder, name, scope }) {
-  const filePath = `${appFolderPath({ groupingFolder, name })}/app.module.ts`;
-
-  const importsSearch = `imports: [
-    BrowserModule
-  ],`;
-  const featureShellModuleClassName =
-    toPascalCase(`${scope}-feature-shell-module`);
-  const importsReplacement = `imports: [
-    BrowserModule,
-    ${featureShellModuleClassName},
-  ],`;
-
-  searchAndReplaceInFile({
-    filePath,
-    replacement: importsReplacement,
-    search: importsSearch,
-  });
-
-  const componentImportSearch =
-    "import { AppComponent } from './app.component';";
-  const featureShellLibraryImportPath = libraryImportPath({
-    npmScope,
-    scope,
-    name: 'feature-shell',
-  });
-  const componentImportReplacement = `import {
-  ${featureShellModuleClassName},
-} from '${featureShellLibraryImportPath}';
-
-${componentImportSearch}`;
-
-  searchAndReplaceInFile({
-    filePath,
-    replacement: componentImportReplacement,
-    search: componentImportSearch,
-  });
-}
-
-function adjustAppComponentSpecToAppComponentTemplate({
-  groupingFolder,
-  name,
-}) {
-  const filePath =
-    `${appFolderPath({ groupingFolder, name })}/app.component.spec.ts`;
-  const search =
-    "expect(compiled.querySelector('.content span').textContent).toContain('check-in-desktop app is running!');";
-  const replacement =
-    "expect(compiled.querySelector('h1').textContent).toContain('check-in-desktop');";
-
-  searchAndReplaceInFile({ filePath, replacement, search });
 }
 
 function useFeatureShell({ groupingFolder, name, scope }) {
