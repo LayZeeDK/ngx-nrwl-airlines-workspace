@@ -64,7 +64,7 @@ module.exports = (config) => {
   });
 };
 `;
-  fs.writeFileSync(`${cwd}/${pathSuffix}/karma.conf.js`, karmaConfig);
+  writeFile(`${cwd}/${pathSuffix}/karma.conf.js`, karmaConfig);
 }
 
 function configureLibraryArchitect({ name, scope }) {
@@ -134,13 +134,20 @@ export class ${featureShellModuleClassName} {}
 `;
 }
 
-function generateApplication({ groupingFolder, name, scope }) {
-  const pathPrefix = ['apps', groupingFolder].join('/') + '/'
+function generateApplication({ groupingFolder, name, npmSCope, scope }) {
+  const projectRoot = 'apps';
+  const pathPrefix = [projectRoot, groupingFolder].join('/') + '/'
 
   generateApplicationProject({ name, pathPrefix, scope });
   extractEndToEndTestingProject({ name, pathPrefix });
   configureApplicationArchitects({ name, pathPrefix });
-  configureKarmaConfig({ groupingFolder, name, projectRoot: 'apps', scope });
+  configureKarmaConfig({ groupingFolder, name, projectRoot, scope });
+  useSharedEnvironmentsLibraryInMainFile({
+    groupingFolder,
+    name,
+    npmScope,
+    projectRoot,
+  });
 }
 
 function generateApplicationProject({ name, pathPrefix, scope }) {
@@ -159,7 +166,7 @@ function generateLibraryAngularModule({ isPresentationLayer, name, scope }) {
   execSync(`ng generate module ${scope}-${name} --project=${scope}-${name} `
     + `--flat ${isPresentationLayer ? '' : '--no-common-module'}`);
 
-  fs.writeFileSync(
+  writeFile(
     `${cwd}/libs/${scope}/${name}/src/lib/${scope}-${name}.module.spec.ts`,
     libraryModuleSpec({ name, scope }));
 }
@@ -176,13 +183,13 @@ function generateLibraryComponent({ name, scope }) {
     return;
   }
 
-  fs.writeFileSync(
+  writeFile(
     `${cwd}/libs/${scope}/${name}/src/lib/${componentName}/${componentName}.component.html`,
     shellComponentTemplate());
-  fs.writeFileSync(
+  writeFile(
     `${cwd}/libs/${scope}/${name}/src/lib/${componentName}/${componentName}.component.spec.ts`,
     shellComponentSpec({ componentName }));
-  fs.writeFileSync(
+  writeFile(
     `${cwd}/libs/${scope}/${name}/src/lib/${scope}-${name}.module.ts`,
     featureShellModule({ componentName, name, scope }));
 }
@@ -199,7 +206,7 @@ function generateLibraryProject({ name, npmScope, scope }) {
 }
 
 function generateLibraryPublicApi({ name, scope }) {
-  fs.writeFileSync(
+  writeFile(
     `${cwd}/libs/${scope}/${name}/src/index.ts`,
     libraryPublicApi({ name, scope }));
 }
@@ -267,6 +274,16 @@ function moveDirectory({ from, to }) {
   execSync(`npx rimraf ${from}`)
 }
 
+function readFile(filePath) {
+  return fs.readFileSync(filePath, { encoding: 'utf8' });
+}
+
+function searchAndReplaceInFile({ filePath, search, replacement }) {
+  const fileContent = readFile(filePath);
+
+  writeFile(filePath, fileContent.replace(search, replacement));
+}
+
 function shellComponentSpec({ componentName }) {
   const shellComponentClassName = toPascalCase(`${componentName}-component`);
 
@@ -313,6 +330,23 @@ function toPascalCase(kebabCase) {
     .join('');
 }
 
+function useSharedEnvironmentsLibraryInMainFile({
+  groupingFolder,
+  name,
+  npmScope,
+  projectRoot,
+}) {
+  const filePath = `${projectRoot}/${groupingFolder}/${name}/src/main.ts`;
+  const search = "import { environment } from './environments/environment';";
+  const replacement = `import { environment } from '@${npmScope}/shared/environments';`;
+
+  searchAndReplaceInFile({ filePath, search, replacement });
+}
+
+function writeFile(filePath, fileContent) {
+  fs.writeFileSync(filePath, fileContent, { encoding: 'utf8' });
+}
+
 const cwd = process.cwd();
 
 if (!fs.existsSync(`${cwd}/angular.json`)) {
@@ -337,12 +371,6 @@ const argv = yargs
           + '"check-in-mobile"',
         type: 'string',
       });
-      yargs.option('grouping-folder', {
-        default: '',
-        description: 'Name of application grouping folder, for example '
-          + '"booking" or "check-in"',
-        type: 'string',
-      });
     },
     handler: _argv => {
       setImmediate(() => {
@@ -354,7 +382,7 @@ const argv = yargs
           process.exit(1);
         }
 
-        generateApplication({ groupingFolder, name, scope });
+        generateApplication({ groupingFolder, name, npmScope, scope });
       });
     },
   })
@@ -370,11 +398,6 @@ const argv = yargs
       });
       yargs.positional('name', {
         description: 'Library name, for example "feature-shell"',
-        type: 'string',
-      });
-      yargs.option('grouping-folder', {
-        default: '',
-        description: 'Name of library grouping folder, for example "seatmap"',
         type: 'string',
       });
       yargs.option('with-state', {
@@ -395,11 +418,11 @@ const argv = yargs
       });
     },
   })
-  .option('scope', {
-    alias: 's',
-    default: defaultScope,
-    description:
-      'Project scope, for example "shared", "booking", or "check-in"',
+  .option('grouping-folder', {
+    alias: 'g',
+    default: '',
+    description: 'Name of project grouping folder, for example "booking", '
+      + '"check-in", or "seatmap"',
     type: 'string',
   })
   .option('npm-scope', {
@@ -407,6 +430,13 @@ const argv = yargs
     default: 'workspace',
     description: 'Workspace path mapping scope, for example "workspace", '
       + 'or "nrwl-airlines"',
+    type: 'string',
+  })
+  .option('scope', {
+    alias: 's',
+    default: defaultScope,
+    description:
+      'Project scope, for example "shared", "booking", or "check-in"',
     type: 'string',
   })
   .demandCommand()
