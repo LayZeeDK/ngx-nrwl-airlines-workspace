@@ -3,42 +3,42 @@ const fs = require('fs');
 const yargs = require('yargs');
 
 function addScopeToLibraryProjectName({ name, scope }) {
-  execSync('npx json -I -f angular.json '
+  runCommand('npx json -I -f angular.json '
     + `-e "this.projects['${scope}-${name}'] = this.projects['${name}']"`);
-  execSync(`npx json -I -f angular.json -e "delete this.projects['${name}']"`);
+  runCommand(`npx json -I -f angular.json -e "delete this.projects['${name}']"`);
 }
 
 function cleanUpDefaultLibraryFiles({ name, scope }) {
-  execSync(`npx rimraf libs/${scope}/${name}/*package.json`);
-  execSync(`npx rimraf libs/${scope}/${name}/tsconfig.lib.prod.json`);
-  execSync(`npx rimraf libs/${scope}/${name}/src/lib/*.*`);
+  runCommand(`npx rimraf libs/${scope}/${name}/*package.json`);
+  runCommand(`npx rimraf libs/${scope}/${name}/tsconfig.lib.prod.json`);
+  runCommand(`npx rimraf libs/${scope}/${name}/src/lib/*.*`);
 }
 
 function configureApplicationArchitects({ name, pathPrefix }) {
-  execSync(`ng config projects["${name}-e2e"].root ${pathPrefix}${name}-e2e`);
-  execSync(`ng config projects["${name}-e2e"].architect.lint.options.tsConfig `
+  runCommand(`ng config projects["${name}-e2e"].root ${pathPrefix}${name}-e2e`);
+  runCommand(`ng config projects["${name}-e2e"].architect.lint.options.tsConfig `
     + `${pathPrefix}${name}-e2e/tsconfig.json`);
-  execSync(`npx json -I -f angular.json -e `
+  runCommand(`npx json -I -f angular.json -e `
     + `"delete this.projects['${name}'].architect.e2e"`);
-  execSync(`npx json -I -f angular.json -e `
+  runCommand(`npx json -I -f angular.json -e `
     + `"this.projects['${name}'].architect.lint.options.tsConfig.pop()"`);
-  execSync(`ng config projects["${name}"].architect.lint.options.exclude[1] `
+  runCommand(`ng config projects["${name}"].architect.lint.options.exclude[1] `
     + `!${pathPrefix}${name}/**`);
-  execSync(`npx json -I -f angular.json -e `
+  runCommand(`npx json -I -f angular.json -e `
     + `"delete this.projects['${name}-e2e'].architect.build"`);
-  execSync(`npx json -I -f angular.json -e `
+  runCommand(`npx json -I -f angular.json -e `
     + `"delete this.projects['${name}-e2e'].architect['extract-i18n']"`);
-  execSync(`npx json -I -f angular.json -e `
+  runCommand(`npx json -I -f angular.json -e `
     + `"delete this.projects['${name}-e2e'].architect.serve"`);
-  execSync(`npx json -I -f angular.json -e `
+  runCommand(`npx json -I -f angular.json -e `
     + `"delete this.projects['${name}-e2e'].architect.test"`);
-  execSync(`npx json -I -f angular.json -e `
+  runCommand(`npx json -I -f angular.json -e `
     + `"delete this.projects['${name}-e2e'].prefix"`);
-  execSync(`npx json -I -f angular.json -e `
+  runCommand(`npx json -I -f angular.json -e `
     + `"delete this.projects['${name}-e2e'].sourceRoot"`);
-  execSync(`npx json -I -f angular.json -e `
+  runCommand(`npx json -I -f angular.json -e `
     + `"delete this.projects['${name}-e2e'].schematics"`);
-  execSync(
+  runCommand(
     `ng config projects["${name}-e2e"].architect.lint.options.exclude[1] `
     + `!${pathPrefix}${name}-e2e/**`);
 }
@@ -64,31 +64,25 @@ module.exports = (config) => {
   });
 };
 `;
-  writeFile(`${cwd}/${pathSuffix}/karma.conf.js`, karmaConfig);
+  writeFile(`${pathSuffix}/karma.conf.js`, karmaConfig);
 }
 
 function configureLibraryArchitect({ name, scope }) {
-  execSync('npx json -I -f angular.json '
+  runCommand('npx json -I -f angular.json '
     + `-e "delete this.projects['${scope}-${name}'].architect.build"`);
-  execSync(
+  runCommand(
     `ng config projects["${scope}-${name}"].architect.lint.options.exclude[1] `
     + `!libs/${scope}/${name}/**`);
-  execSync(`npx json -I -f libs/${scope}/${name}/tslint.json `
+  runCommand(`npx json -I -f libs/${scope}/${name}/tslint.json `
     + `-e "this.linterOptions = { exclude: ['!**/*'] }"`);
 }
 
 function configurePathMapping({ name, npmScope, scope }) {
-  execSync(`npx json -I -f tsconfig.json -e `
+  runCommand(`npx json -I -f tsconfig.json -e `
     + `"delete this.compilerOptions.paths['${name}']"`);
-  execSync(`npx json -I -f tsconfig.json `
+  runCommand(`npx json -I -f tsconfig.json `
     + `-e "this.compilerOptions.paths['@${npmScope}/${scope}/${name}'] = `
     + `['libs/${scope}/${name}/src/index.ts']"`);
-}
-
-function execSync(command) {
-  return childProcess.execSync(command, {
-    stdio: 'inherit',
-  });
 }
 
 function extractEndToEndTestingProject({ name, pathPrefix }) {
@@ -96,14 +90,14 @@ function extractEndToEndTestingProject({ name, pathPrefix }) {
     from: `${pathPrefix}${name}/e2e`,
     to: `${pathPrefix}${name}-e2e`,
   });
-  execSync(`npx json -I -f ${pathPrefix}${name}-e2e/tsconfig.json -e `
+  runCommand(`npx json -I -f ${pathPrefix}${name}-e2e/tsconfig.json -e `
     + `"this.extends = '../../../tsconfig.json'"`);
-  execSync(`npx json -I -f ${pathPrefix}${name}-e2e/tsconfig.json -e `
+  runCommand(`npx json -I -f ${pathPrefix}${name}-e2e/tsconfig.json -e `
     + `"this.compilerOptions.outDir = '../../../out-tsc/e2e'"`);
-  execSync(
+  runCommand(
     `ng config projects["${name}"].architect.e2e.options.protractorConfig `
     + `${pathPrefix}${name}-e2e/protractor.conf.js`);
-  execSync(`npx json -I -f angular.json -e `
+  runCommand(`npx json -I -f angular.json -e `
     + `"this.projects['${name}-e2e'] = this.projects['${name}']"`);
 }
 
@@ -134,40 +128,49 @@ export class ${featureShellModuleClassName} {}
 `;
 }
 
-function generateApplication({ groupingFolder, name, npmSCope, scope }) {
+function generateApplication({ groupingFolder, name, npmScope, scope }) {
   const projectRoot = 'apps';
   const pathPrefix = [projectRoot, groupingFolder].join('/') + '/'
+  const maybeSharedEnvironmentsLibraryName =
+    readMaybeSharedEnvironmentsLibraryName({ scope });
+  const hasSharedEnvironmentsLibary =
+    maybeSharedEnvironmentsLibraryName !== undefined;
 
   generateApplicationProject({ name, pathPrefix, scope });
+
+  if (hasSharedEnvironmentsLibary) {
+    useSharedEnvironmentsLibraryInMainFile({
+      groupingFolder,
+      name,
+      npmScope,
+      projectRoot,
+      sharedEnvironmentsLibraryName: maybeSharedEnvironmentsLibraryName,
+    });
+  }
+  // setAppComponentTemplate({ name });
   extractEndToEndTestingProject({ name, pathPrefix });
   configureApplicationArchitects({ name, pathPrefix });
   configureKarmaConfig({ groupingFolder, name, projectRoot, scope });
-  useSharedEnvironmentsLibraryInMainFile({
-    groupingFolder,
-    name,
-    npmScope,
-    projectRoot,
-  });
 }
 
 function generateApplicationProject({ name, pathPrefix, scope }) {
-  execSync(`ng generate application ${name} --prefix=${scope} `
+  runCommand(`ng generate application ${name} --prefix=${scope} `
     + `--project-root=${pathPrefix}${name} --style=css --routing=false`);
 }
 
 function generateFeatureState({ name, scope }) {
-  execSync(
+  runCommand(
     `ng generate @ngrx/schematics:feature +state/${scope} `
     + `--project=${scope}-${name} --module=${scope}-${name}.module.ts `
     + '--creators=true --api=false');
 }
 
 function generateLibraryAngularModule({ isPresentationLayer, name, scope }) {
-  execSync(`ng generate module ${scope}-${name} --project=${scope}-${name} `
+  runCommand(`ng generate module ${scope}-${name} --project=${scope}-${name} `
     + `--flat ${isPresentationLayer ? '' : '--no-common-module'}`);
 
   writeFile(
-    `${cwd}/libs/${scope}/${name}/src/lib/${scope}-${name}.module.spec.ts`,
+    `libs/${scope}/${name}/src/lib/${scope}-${name}.module.spec.ts`,
     libraryModuleSpec({ name, scope }));
 }
 
@@ -175,7 +178,7 @@ function generateLibraryComponent({ name, scope }) {
   const isFeatureShell = name.endsWith('feature-shell');
   const componentName = isFeatureShell ? 'shell' : name.replace(/^.*?-/, '');
 
-  execSync(`ng generate component ${componentName} `
+  runCommand(`ng generate component ${componentName} `
     + `--project=${scope}-${name} --module=${scope}-${name}.module.ts `
     + `--display-block`);
 
@@ -184,13 +187,13 @@ function generateLibraryComponent({ name, scope }) {
   }
 
   writeFile(
-    `${cwd}/libs/${scope}/${name}/src/lib/${componentName}/${componentName}.component.html`,
+    `libs/${scope}/${name}/src/lib/${componentName}/${componentName}.component.html`,
     shellComponentTemplate());
   writeFile(
-    `${cwd}/libs/${scope}/${name}/src/lib/${componentName}/${componentName}.component.spec.ts`,
+    `libs/${scope}/${name}/src/lib/${componentName}/${componentName}.component.spec.ts`,
     shellComponentSpec({ componentName }));
   writeFile(
-    `${cwd}/libs/${scope}/${name}/src/lib/${scope}-${name}.module.ts`,
+    `libs/${scope}/${name}/src/lib/${scope}-${name}.module.ts`,
     featureShellModule({ componentName, name, scope }));
 }
 
@@ -200,14 +203,14 @@ function generateLibraryProject({ name, npmScope, scope }) {
       ? npmScope
       : scope;
 
-  execSync(`ng config newProjectRoot libs/${scope}`);
-  execSync(`ng generate library ${name} --prefix=${prefix} `
+  runCommand(`ng config newProjectRoot libs/${scope}`);
+  runCommand(`ng generate library ${name} --prefix=${prefix} `
     + '--entry-file=index --skip-install --skip-package-json');
 }
 
 function generateLibraryPublicApi({ name, scope }) {
   writeFile(
-    `${cwd}/libs/${scope}/${name}/src/index.ts`,
+    `libs/${scope}/${name}/src/index.ts`,
     libraryPublicApi({ name, scope }));
 }
 
@@ -270,12 +273,30 @@ export * from './lib/${scope}-${name}.module';
 }
 
 function moveDirectory({ from, to }) {
-  execSync(`npx copy ${from}/**/* ${to}`);
-  execSync(`npx rimraf ${from}`)
+  runCommand(`npx copy ${from}/**/* ${to}`);
+  runCommand(`npx rimraf ${from}`)
+}
+
+function readAngularJson() {
+  return JSON.parse(readFile('angular.json'));
 }
 
 function readFile(filePath) {
-  return fs.readFileSync(filePath, { encoding: 'utf8' });
+  return fs.readFileSync(`${cwd}/${filePath}`, { encoding: 'utf8' });
+}
+
+function readMaybeSharedEnvironmentsLibraryName({ scope }) {
+  const scopedSharedEnvironmentsLibraryName = `${scope}-shared-environments`;
+
+  return Object.keys(readAngularJson().projects)
+    .find(projectName => [
+      'shared-environments',
+      scopedSharedEnvironmentsLibraryName,
+    ].includes(projectName));
+}
+
+function runCommand(command) {
+  return childProcess.execSync(command, { stdio: 'inherit' });
 }
 
 function searchAndReplaceInFile({ filePath, search, replacement }) {
@@ -335,21 +356,29 @@ function useSharedEnvironmentsLibraryInMainFile({
   name,
   npmScope,
   projectRoot,
+  sharedEnvironmentsLibraryName,
 }) {
-  const filePath = `${projectRoot}/${groupingFolder}/${name}/src/main.ts`;
+  const filePath =
+    [projectRoot, groupingFolder, name, 'src', 'main.ts'].join('/');
   const search = "import { environment } from './environments/environment';";
-  const replacement = `import { environment } from '@${npmScope}/shared/environments';`;
+  const sharedEnvironmentsLibraryRoot = readAngularJson()
+    .projects[sharedEnvironmentsLibraryName]
+    .root;
+  const sharedEnvironmentsLibraryImportPath = `@${npmScope}/`
+    + sharedEnvironmentsLibraryRoot.replace(/^libs\//, '');
+  const replacement =
+    `import { environment } from '${sharedEnvironmentsLibraryImportPath}';`;
 
   searchAndReplaceInFile({ filePath, search, replacement });
 }
 
 function writeFile(filePath, fileContent) {
-  fs.writeFileSync(filePath, fileContent, { encoding: 'utf8' });
+  fs.writeFileSync(`${cwd}/${filePath}`, fileContent, { encoding: 'utf8' });
 }
 
 const cwd = process.cwd();
 
-if (!fs.existsSync(`${cwd}/angular.json`)) {
+if (!fs.existsSync(`angular.json`)) {
   console.error(
     'ERROR: Must be run from the workspace root folder that contains '
     + 'angular.json.');
