@@ -9,6 +9,6 @@ import * as fromSeatmap from './+state/seatmap.reducer';
   imports: [
     StoreModule.forFeature(fromSeatmap.seatmapFeatureKey, fromSeatmap.reducer),
     EffectsModule.forFeature([SeatmapEffects]),
-  ]
+  ],
 })
 export class SeatmapDataAccessModule { }
