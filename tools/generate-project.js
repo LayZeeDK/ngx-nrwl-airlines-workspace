@@ -433,8 +433,8 @@ describe('${moduleName}', () => {
 
 function libraryPublicApi({ name, scope }) {
   return `/*
-* Public API Surface of ${scope}-${name}
-*/
+ * Public API Surface of ${scope}-${name}
+ */
 
 export * from './lib/${scope}-${name}.module';
 `;
