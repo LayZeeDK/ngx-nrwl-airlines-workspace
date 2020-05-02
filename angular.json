@@ -805,6 +805,35 @@
           }
         }
       }
+    },
+    "seatmap-feature-seat-listing": {
+      "projectType": "library",
+      "root": "libs/shared/seatmap/feature-seat-listing",
+      "sourceRoot": "libs/shared/seatmap/feature-seat-listing/src",
+      "prefix": "seatmap",
+      "architect": {
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "libs/shared/seatmap/feature-seat-listing/src/test.ts",
+            "tsConfig": "libs/shared/seatmap/feature-seat-listing/tsconfig.spec.json",
+            "karmaConfig": "libs/shared/seatmap/feature-seat-listing/karma.conf.js"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "libs/shared/seatmap/feature-seat-listing/tsconfig.lib.json",
+              "libs/shared/seatmap/feature-seat-listing/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**",
+              "!libs/seatmap/feature-seat-listing/**"
+            ]
+          }
+        }
+      }
     }
   },
   "defaultProject": "booking-desktop"
