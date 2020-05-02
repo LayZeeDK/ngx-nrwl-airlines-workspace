@@ -643,6 +643,139 @@
           }
         }
       }
+    },
+    "check-in-mobile": {
+      "projectType": "application",
+      "schematics": {},
+      "root": "apps/check-in/check-in-mobile",
+      "sourceRoot": "apps/check-in/check-in-mobile/src",
+      "prefix": "check-in",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "dist/check-in-mobile",
+            "index": "apps/check-in/check-in-mobile/src/index.html",
+            "main": "apps/check-in/check-in-mobile/src/main.ts",
+            "polyfills": "apps/check-in/check-in-mobile/src/polyfills.ts",
+            "tsConfig": "apps/check-in/check-in-mobile/tsconfig.app.json",
+            "aot": true,
+            "assets": [
+              "apps/check-in/check-in-mobile/src/favicon.ico",
+              "apps/check-in/check-in-mobile/src/assets"
+            ],
+            "styles": [
+              "apps/check-in/check-in-mobile/src/styles.css"
+            ],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "apps/check-in/check-in-mobile/src/environments/environment.ts",
+                  "with": "apps/check-in/check-in-mobile/src/environments/environment.prod.ts"
+                }
+              ],
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "extractCss": true,
+              "namedChunks": false,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": true,
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "6kb",
+                  "maximumError": "10kb"
+                }
+              ]
+            }
+          }
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "browserTarget": "check-in-mobile:build"
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "check-in-mobile:build:production"
+            }
+          }
+        },
+        "extract-i18n": {
+          "builder": "@angular-devkit/build-angular:extract-i18n",
+          "options": {
+            "browserTarget": "check-in-mobile:build"
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "apps/check-in/check-in-mobile/src/test.ts",
+            "polyfills": "apps/check-in/check-in-mobile/src/polyfills.ts",
+            "tsConfig": "apps/check-in/check-in-mobile/tsconfig.spec.json",
+            "karmaConfig": "apps/check-in/check-in-mobile/karma.conf.js",
+            "assets": [
+              "apps/check-in/check-in-mobile/src/favicon.ico",
+              "apps/check-in/check-in-mobile/src/assets"
+            ],
+            "styles": [
+              "apps/check-in/check-in-mobile/src/styles.css"
+            ],
+            "scripts": []
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "apps/check-in/check-in-mobile/tsconfig.app.json",
+              "apps/check-in/check-in-mobile/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**",
+              "!apps/check-in/check-in-mobile/**"
+            ]
+          }
+        }
+      }
+    },
+    "check-in-mobile-e2e": {
+      "projectType": "application",
+      "root": "apps/check-in/check-in-mobile-e2e",
+      "architect": {
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": "apps/check-in/check-in-mobile-e2e/tsconfig.json",
+            "exclude": [
+              "**/node_modules/**",
+              "!apps/check-in/check-in-mobile-e2e/**"
+            ]
+          }
+        },
+        "e2e": {
+          "builder": "@angular-devkit/build-angular:protractor",
+          "options": {
+            "protractorConfig": "apps/check-in/check-in-mobile-e2e/protractor.conf.js",
+            "devServerTarget": "check-in-mobile:serve"
+          },
+          "configurations": {
+            "production": {
+              "devServerTarget": "check-in-mobile:serve:production"
+            }
+          }
+        }
+      }
     }
   },
   "defaultProject": "booking-desktop"
