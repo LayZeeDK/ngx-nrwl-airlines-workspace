@@ -17,13 +17,21 @@ const routes: Routes = [
       },
       {
         path: 'flight-search',
-        loadChildren: () => import('@nrwl-airlines/booking/feature-flight-search')
-          .then(esModule => esModule.BookingFeatureFlightSearchModule),
+        loadChildren: () =>
+          import('@nrwl-airlines/booking/feature-flight-search')
+            .then(esModule => esModule.BookingFeatureFlightSearchModule),
       },
       {
         path: 'passenger-info',
-        loadChildren: () => import('@nrwl-airlines/booking/feature-passenger-info')
-          .then(esModule => esModule.BookingFeaturePassengerInfoModule),
+        loadChildren: () =>
+          import('@nrwl-airlines/booking/feature-passenger-info')
+            .then(esModule => esModule.BookingFeaturePassengerInfoModule),
+      },
+      {
+        path: 'seatmap',
+        loadChildren: () =>
+          import('@nrwl-airlines/seatmap/feature-seat-listing')
+            .then(esModule => esModule.SeatmapFeatureSeatListingModule),
       },
     ],
   },

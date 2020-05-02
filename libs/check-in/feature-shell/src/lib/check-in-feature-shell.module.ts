@@ -7,7 +7,19 @@ const routes: Routes = [
   {
     path: '',
     component: ShellComponent,
-    children: [],
+    children: [
+      {
+        path: '',
+        pathMatch: 'full',
+        redirectTo: 'seatmap',
+      },
+      {
+        path: 'seatmap',
+        loadChildren: () =>
+          import('@nrwl-airlines/seatmap/feature-seat-listing')
+            .then(esModule => esModule.SeatmapFeatureSeatListingModule),
+      },
+    ],
   },
 ];
 
@@ -18,4 +30,4 @@ const routes: Routes = [
     RouterModule.forRoot(routes),
   ],
 })
-export class CheckInFeatureShellModule {}
+export class CheckInFeatureShellModule { }
