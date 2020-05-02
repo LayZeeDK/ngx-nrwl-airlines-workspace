@@ -9,19 +9,7 @@ const routes: Routes = [
   {
     path: '',
     component: ShellComponent,
-    children: [
-      {
-        path: '',
-        pathMatch: 'full',
-        redirectTo: 'seatmap',
-      },
-      {
-        path: 'seatmap',
-        loadChildren: () =>
-          import('@nrwl-airlines/seatmap/feature-seat-listing')
-            .then(esModule => esModule.SeatmapFeatureSeatListingModule),
-      },
-    ],
+    children: [],
   },
 ];
 
