@@ -353,10 +353,10 @@ function generateLibraryPublicApi({ name, pathPrefix, scope }) {
     libraryPublicApi({ name, scope }));
 }
 
-function generateWorkspaceLibrary({ groupingFolder, name, npmScope, scope, type }) {
+function generateWorkspaceLibrary({ groupingFolder = '', name, npmScope, scope, type }) {
   const isDataAccess = type === 'data-access';
   const isPresentationLayer = ['feature', 'ui'].includes(type);
-  const pathPrefix = ['libs', groupingFolder].join('/');
+  const pathPrefix = ['libs', (groupingFolder || scope)].join('/');
 
   generateLibraryProject({ name, npmScope, pathPrefix, scope });
   addScopeToLibraryProjectName({ name, scope });
