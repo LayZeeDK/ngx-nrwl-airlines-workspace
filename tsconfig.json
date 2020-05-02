@@ -50,6 +50,9 @@
       ],
       "@nrwl-airlines/seatmap/feature-seat-listing": [
         "libs/shared/seatmap/feature-seat-listing/src/index.ts"
+      ],
+      "@nrwl-airlines/shared/ui-buttons": [
+        "libs/shared/ui-buttons/src/index.ts"
       ]
     }
   },
