@@ -299,12 +299,17 @@ function generateFeatureState({ name, scope }) {
     + '--creators=true --api=false');
 }
 
-function generateLibraryAngularModule({ isPresentationLayer, name, scope }) {
+function generateLibraryAngularModule({
+  isPresentationLayer,
+  name,
+  pathPrefix,
+  scope,
+}) {
   runCommand(`ng generate module ${scope}-${name} --project=${scope}-${name} `
     + `--flat ${isPresentationLayer ? '' : '--no-common-module'}`);
 
   writeFile(
-    `libs/${scope}/${name}/src/lib/${scope}-${name}.module.spec.ts`,
+    `${pathPrefix}/${name}/src/lib/${scope}-${name}.module.spec.ts`,
     libraryModuleSpec({ name, scope }));
 }
 
@@ -360,6 +365,7 @@ function generateWorkspaceLibrary({ groupingFolder, name, npmScope, scope, type 
   generateLibraryAngularModule({
     isPresentationLayer,
     name,
+    pathPrefix,
     scope,
   });
 
