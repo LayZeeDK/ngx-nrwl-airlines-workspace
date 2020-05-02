@@ -54,10 +54,10 @@ function appFolderPath({ groupingFolder, name }) {
     .join('/');
 }
 
-function cleanUpDefaultLibraryFiles({ name, scope }) {
-  runCommand(`npx rimraf libs/${scope}/${name}/*package.json`);
-  runCommand(`npx rimraf libs/${scope}/${name}/tsconfig.lib.prod.json`);
-  runCommand(`npx rimraf libs/${scope}/${name}/src/lib/*.*`);
+function cleanUpDefaultLibraryFiles({ pathPrefix, name }) {
+  runCommand(`npx rimraf ${pathPrefix}/${name}/*package.json`);
+  runCommand(`npx rimraf ${pathPrefix}/${name}/tsconfig.lib.prod.json`);
+  runCommand(`npx rimraf ${pathPrefix}/${name}/src/lib/*.*`);
 }
 
 function configureApplicationArchitects({ name, pathPrefix }) {
@@ -89,15 +89,14 @@ function configureApplicationArchitects({ name, pathPrefix }) {
     + `!${pathPrefix}/${name}-e2e/**`);
 }
 
-function configureKarmaConfig({ name, groupingFolder, projectRoot, scope }) {
-  if (scope === groupingFolder) {
-    groupingFolder = '';
-  }
-
-  const pathSuffix = [projectRoot, scope, groupingFolder, name].join('/')
+function configureKarmaConfig({ groupingFolder, name, pathPrefix, projectRoot }) {
+  const coveragePath = pathPrefix.replace(`${projectRoot}/`, '') + `/${name}`;
+  const directoryUpNavigationCount = groupingFolder.split('/').length + 2;
+  const directoryUpNavigations =
+    Array(directoryUpNavigationCount).fill('..').join('/');
   const karmaConfig = `const path = require('path');
 
-const getBaseKarmaConfig = require('../../../karma.conf');
+const getBaseKarmaConfig = require('${directoryUpNavigations}/karma.conf');
 
 module.exports = (config) => {
   const baseConfig = getBaseKarmaConfig();
@@ -105,30 +104,36 @@ module.exports = (config) => {
     ...baseConfig,
     coverageIstanbulReporter: {
       ...baseConfig.coverageIstanbulReporter,
-      dir: path.join(__dirname, '../../../coverage/${pathSuffix}'),
+      dir: path.join(__dirname, '${directoryUpNavigations}/coverage/${coveragePath}'),
     },
   });
 };
 `;
-  writeFile(`${pathSuffix}/karma.conf.js`, karmaConfig);
+  writeFile(`${pathPrefix}/${name}/karma.conf.js`, karmaConfig);
 }
 
-function configureLibraryArchitect({ name, scope }) {
+function configureLibraryArchitect({ name, pathPrefix, scope }) {
   runCommand('npx json -I -f angular.json '
     + `-e "delete this.projects['${scope}-${name}'].architect.build"`);
   runCommand(
     `ng config projects["${scope}-${name}"].architect.lint.options.exclude[1] `
     + `!libs/${scope}/${name}/**`);
-  runCommand(`npx json -I -f libs/${scope}/${name}/tslint.json `
+  runCommand(`npx json -I -f ${pathPrefix}/${name}/tslint.json `
     + `-e "this.linterOptions = { exclude: ['!**/*'] }"`);
 }
 
-function configurePathMapping({ name, npmScope, scope }) {
+function configurePathMapping({
+  groupingFolder,
+  name,
+  npmScope,
+  pathPrefix,
+  scope,
+}) {
   runCommand(`npx json -I -f tsconfig.json -e `
     + `"delete this.compilerOptions.paths['${name}']"`);
   runCommand(`npx json -I -f tsconfig.json `
     + `-e "this.compilerOptions.paths['@${npmScope}/${scope}/${name}'] = `
-    + `['libs/${scope}/${name}/src/index.ts']"`);
+    + `['${pathPrefix}/${name}/src/index.ts']"`);
 }
 
 function deleteEnvironmentsFolder({ projectPath }) {
@@ -275,7 +280,7 @@ function generateApplication({ groupingFolder, name, npmScope, scope }) {
 
   extractEndToEndTestingProject({ name, pathPrefix });
   configureApplicationArchitects({ name, pathPrefix });
-  configureKarmaConfig({ groupingFolder, name, projectRoot, scope });
+  configureKarmaConfig({ groupingFolder, name, pathPrefix, projectRoot });
 
   if (hasFeatureShellLibrary({ scope })) {
     useFeatureShell({ groupingFolder, name, scope });
@@ -326,31 +331,32 @@ function generateLibraryComponent({ name, scope }) {
     featureShellModule({ componentName, name, scope }));
 }
 
-function generateLibraryProject({ name, npmScope, scope }) {
+function generateLibraryProject({ name, npmScope, pathPrefix, scope }) {
   const prefix =
     (scope === defaultScope)
       ? npmScope
       : scope;
 
-  runCommand(`ng config newProjectRoot libs/${scope}`);
+  runCommand(`ng config newProjectRoot ${pathPrefix}`);
   runCommand(`ng generate library ${name} --prefix=${prefix} `
     + '--entry-file=index --skip-install --skip-package-json');
 }
 
-function generateLibraryPublicApi({ name, scope }) {
+function generateLibraryPublicApi({ name, pathPrefix, scope }) {
   writeFile(
-    `libs/${scope}/${name}/src/index.ts`,
+    `${pathPrefix}/${name}/src/index.ts`,
     libraryPublicApi({ name, scope }));
 }
 
 function generateWorkspaceLibrary({ groupingFolder, name, npmScope, scope, type }) {
   const isDataAccess = type === 'data-access';
   const isPresentationLayer = ['feature', 'ui'].includes(type);
+  const pathPrefix = ['libs', groupingFolder].join('/');
 
-  generateLibraryProject({ name, npmScope, scope });
+  generateLibraryProject({ name, npmScope, pathPrefix, scope });
   addScopeToLibraryProjectName({ name, scope });
-  configureLibraryArchitect({ name, scope });
-  cleanUpDefaultLibraryFiles({ name, scope });
+  configureLibraryArchitect({ name, pathPrefix, scope });
+  cleanUpDefaultLibraryFiles({ name, pathPrefix });
   generateLibraryAngularModule({
     isPresentationLayer,
     name,
@@ -365,9 +371,20 @@ function generateWorkspaceLibrary({ groupingFolder, name, npmScope, scope, type 
     generateFeatureState({ name, scope });
   }
 
-  generateLibraryPublicApi({ name, scope });
-  configurePathMapping({ name, npmScope, scope });
-  configureKarmaConfig({ groupingFolder, name, projectRoot: 'libs', scope });
+  generateLibraryPublicApi({ name, pathPrefix, scope });
+  configurePathMapping({
+    groupingFolder,
+    name,
+    npmScope,
+    pathPrefix,
+    scope,
+  });
+  configureKarmaConfig({
+    groupingFolder,
+    name,
+    pathPrefix,
+    projectRoot: 'libs',
+  });
 }
 
 function hasFeatureShellLibrary({ scope }) {
