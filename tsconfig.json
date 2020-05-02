@@ -44,6 +44,9 @@
       ],
       "@nrwl-airlines/check-in/feature-shell": [
         "libs/check-in/feature-shell/src/index.ts"
+      ],
+      "@nrwl-airlines/seatmap/data-access": [
+        "libs/shared/seatmap/data-access/src/index.ts"
       ]
     }
   },
