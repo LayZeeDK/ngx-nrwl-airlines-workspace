@@ -22,6 +22,23 @@ function adjustAppComponentSpecToAppComponentTemplate({
   searchAndReplaceInFile({ filePath, replacement, search });
 }
 
+function adjustAppEndToEndTestSuite({ groupingFolder, name }) {
+  searchAndReplaceInFile({
+    filePath:
+      `${endToEndSrcFolderPath({ groupingFolder, name })}/app.e2e-spec.ts`,
+    search: `${name} app is running!`,
+    replacement: name,
+  });
+}
+
+function adjustAppPageObject({ groupingFolder, name }) {
+  searchAndReplaceInFile({
+    filePath: `${endToEndSrcFolderPath({ groupingFolder, name })}/app.po.ts`,
+    search: /(.*?-root) .content span/,
+    replacement: '$1 h1',
+  });
+}
+
 function appComponentWithFeatureShellTemplate() {
   return `<h1>
   {{title}}
@@ -44,15 +61,15 @@ function cleanUpDefaultLibraryFiles({ name, scope }) {
 }
 
 function configureApplicationArchitects({ name, pathPrefix }) {
-  runCommand(`ng config projects["${name}-e2e"].root ${pathPrefix}${name}-e2e`);
+  runCommand(`ng config projects["${name}-e2e"].root ${pathPrefix}/${name}-e2e`);
   runCommand(`ng config projects["${name}-e2e"].architect.lint.options.tsConfig `
-    + `${pathPrefix}${name}-e2e/tsconfig.json`);
+    + `${pathPrefix}/${name}-e2e/tsconfig.json`);
   runCommand(`npx json -I -f angular.json -e `
     + `"delete this.projects['${name}'].architect.e2e"`);
   runCommand(`npx json -I -f angular.json -e `
     + `"this.projects['${name}'].architect.lint.options.tsConfig.pop()"`);
   runCommand(`ng config projects["${name}"].architect.lint.options.exclude[1] `
-    + `!${pathPrefix}${name}/**`);
+    + `!${pathPrefix}/${name}/**`);
   runCommand(`npx json -I -f angular.json -e `
     + `"delete this.projects['${name}-e2e'].architect.build"`);
   runCommand(`npx json -I -f angular.json -e `
@@ -69,7 +86,7 @@ function configureApplicationArchitects({ name, pathPrefix }) {
     + `"delete this.projects['${name}-e2e'].schematics"`);
   runCommand(
     `ng config projects["${name}-e2e"].architect.lint.options.exclude[1] `
-    + `!${pathPrefix}${name}-e2e/**`);
+    + `!${pathPrefix}/${name}-e2e/**`);
 }
 
 function configureKarmaConfig({ name, groupingFolder, projectRoot, scope }) {
@@ -114,18 +131,28 @@ function configurePathMapping({ name, npmScope, scope }) {
     + `['libs/${scope}/${name}/src/index.ts']"`);
 }
 
+function deleteEnvironmentsFolder({ projectPath }) {
+  runCommand(`npx rimraf ${projectPath}/src/environments`);
+}
+
+function endToEndSrcFolderPath({ groupingFolder, name }) {
+  return ['apps', groupingFolder, `${name}-e2e`, 'src']
+    .filter(x => !!x)
+    .join('/');
+}
+
 function extractEndToEndTestingProject({ name, pathPrefix }) {
   moveDirectory({
-    from: `${pathPrefix}${name}/e2e`,
-    to: `${pathPrefix}${name}-e2e`,
+    from: `${pathPrefix}/${name}/e2e`,
+    to: `${pathPrefix}/${name}-e2e`,
   });
-  runCommand(`npx json -I -f ${pathPrefix}${name}-e2e/tsconfig.json -e `
+  runCommand(`npx json -I -f ${pathPrefix}/${name}-e2e/tsconfig.json -e `
     + `"this.extends = '../../../tsconfig.json'"`);
-  runCommand(`npx json -I -f ${pathPrefix}${name}-e2e/tsconfig.json -e `
+  runCommand(`npx json -I -f ${pathPrefix}/${name}-e2e/tsconfig.json -e `
     + `"this.compilerOptions.outDir = '../../../out-tsc/e2e'"`);
   runCommand(
     `ng config projects["${name}"].architect.e2e.options.protractorConfig `
-    + `${pathPrefix}${name}-e2e/protractor.conf.js`);
+    + `${pathPrefix}/${name}-e2e/protractor.conf.js`);
   runCommand(`npx json -I -f angular.json -e `
     + `"this.projects['${name}-e2e'] = this.projects['${name}']"`);
 }
@@ -226,7 +253,7 @@ export class ${featureShellModuleClassName} {}
 
 function generateApplication({ groupingFolder, name, npmScope, scope }) {
   const projectRoot = 'apps';
-  const pathPrefix = [projectRoot, groupingFolder].join('/') + '/'
+  const pathPrefix = [projectRoot, groupingFolder].join('/');
 
   generateApplicationProject({ name, pathPrefix, scope });
 
@@ -241,20 +268,23 @@ function generateApplication({ groupingFolder, name, npmScope, scope }) {
       projectRoot,
       sharedEnvironmentsLibraryName,
     });
-  }
 
-  if (hasFeatureShellLibrary({ scope })) {
-    useFeatureShell({ groupingFolder, name, scope });
+    const projectPath = `${pathPrefix}/${name}`;
+    deleteEnvironmentsFolder({ projectPath });
   }
 
   extractEndToEndTestingProject({ name, pathPrefix });
   configureApplicationArchitects({ name, pathPrefix });
   configureKarmaConfig({ groupingFolder, name, projectRoot, scope });
+
+  if (hasFeatureShellLibrary({ scope })) {
+    useFeatureShell({ groupingFolder, name, scope });
+  }
 }
 
 function generateApplicationProject({ name, pathPrefix, scope }) {
   runCommand(`ng generate application ${name} --prefix=${scope} `
-    + `--project-root=${pathPrefix}${name} --style=css --routing=false`);
+    + `--project-root=${pathPrefix}/${name} --style=css --routing=false`);
 }
 
 function generateFeatureState({ name, scope }) {
@@ -477,6 +507,8 @@ function useFeatureShell({ groupingFolder, name, scope }) {
   adjustAppComponentSpecToAppComponentTemplate({ groupingFolder, name });
   importFeatureShellModuleInAppModule({ groupingFolder, name, scope });
   importRouterModuleInAppComponentSpec({ groupingFolder, name });
+  adjustAppPageObject({ groupingFolder, name });
+  adjustAppEndToEndTestSuite({ groupingFolder, name });
 }
 
 function useSharedEnvironmentsLibraryInMainFile({
