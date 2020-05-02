@@ -53,6 +53,9 @@
       ],
       "@nrwl-airlines/shared/ui-buttons": [
         "libs/shared/ui-buttons/src/index.ts"
+      ],
+      "@nrwl-airlines/shared/util-formatting": [
+        "libs/shared/util-formatting/src/index.ts"
       ]
     }
   },

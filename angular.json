@@ -863,6 +863,35 @@
           }
         }
       }
+    },
+    "shared-util-formatting": {
+      "projectType": "library",
+      "root": "libs/shared/util-formatting",
+      "sourceRoot": "libs/shared/util-formatting/src",
+      "prefix": "nrwl-airlines",
+      "architect": {
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "libs/shared/util-formatting/src/test.ts",
+            "tsConfig": "libs/shared/util-formatting/tsconfig.spec.json",
+            "karmaConfig": "libs/shared/util-formatting/karma.conf.js"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "libs/shared/util-formatting/tsconfig.lib.json",
+              "libs/shared/util-formatting/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**",
+              "!libs/shared/util-formatting/**"
+            ]
+          }
+        }
+      }
     }
   },
   "defaultProject": "booking-desktop"
