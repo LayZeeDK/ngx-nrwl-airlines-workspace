@@ -8,7 +8,7 @@ module.exports = (config) => {
     ...baseConfig,
     coverageIstanbulReporter: {
       ...baseConfig.coverageIstanbulReporter,
-      dir: path.join(__dirname, '../../../coverage/shared/ui-buttons'),
+      dir: path.join(__dirname, '../../../coverage/libs/shared/ui-buttons'),
     },
   });
 };

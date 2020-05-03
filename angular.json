@@ -540,8 +540,8 @@
             "production": {
               "fileReplacements": [
                 {
-                  "replace": "apps/check-in/check-in-desktop/src/environments/environment.ts",
-                  "with": "apps/check-in/check-in-desktop/src/environments/environment.prod.ts"
+                  "replace": "libs/shared/environments/src/lib/environment.ts",
+                  "with": "libs/shared/environments/src/lib/environment.prod.ts"
                 }
               ],
               "optimization": true,
@@ -673,8 +673,8 @@
             "production": {
               "fileReplacements": [
                 {
-                  "replace": "apps/check-in/check-in-mobile/src/environments/environment.ts",
-                  "with": "apps/check-in/check-in-mobile/src/environments/environment.prod.ts"
+                  "replace": "libs/shared/environments/src/lib/environment.ts",
+                  "with": "libs/shared/environments/src/lib/environment.prod.ts"
                 }
               ],
               "optimization": true,

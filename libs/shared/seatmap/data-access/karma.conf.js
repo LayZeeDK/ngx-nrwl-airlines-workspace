@@ -8,7 +8,7 @@ module.exports = (config) => {
     ...baseConfig,
     coverageIstanbulReporter: {
       ...baseConfig.coverageIstanbulReporter,
-      dir: path.join(__dirname, '../../../../coverage/shared/seatmap/data-access'),
+      dir: path.join(__dirname, '../../../../coverage/libs/shared/seatmap/data-access'),
     },
   });
 };

@@ -8,7 +8,7 @@ module.exports = (config) => {
     ...baseConfig,
     coverageIstanbulReporter: {
       ...baseConfig.coverageIstanbulReporter,
-      dir: path.join(__dirname, '../../../coverage/libs/check-in//feature-shell'),
+      dir: path.join(__dirname, '../../../coverage/libs/check-in/feature-shell'),
     },
   });
 };
