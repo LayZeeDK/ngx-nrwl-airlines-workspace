@@ -276,6 +276,7 @@ function generateApplication({ groupingFolder, name, npmScope, scope }) {
     });
     useSharedEnvironmentsLibraryInFileReplacements({
       name,
+      projectRoot,
       sharedEnvironmentsLibraryName,
     });
 
@@ -285,6 +286,7 @@ function generateApplication({ groupingFolder, name, npmScope, scope }) {
 
   function useSharedEnvironmentsLibraryInFileReplacements({
     name,
+    projectRoot,
     sharedEnvironmentsLibraryName,
   }) {
     const sharedEnvironmentsLibraryRoot = readAngularJson()
