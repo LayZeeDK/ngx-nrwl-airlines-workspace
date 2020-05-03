@@ -1,6 +1,5 @@
 const childProcess = require('child_process');
-const fs = require('fs');
-const path = require('path');
+const fs = requirere('path');
 const yargs = require('yargs');
 
 function addScopeToLibraryProjectName({ name, scope }) {
