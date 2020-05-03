@@ -1,5 +1,6 @@
 const childProcess = require('child_process');
 const fs = require('fs');
+const path = require('path');
 const yargs = require('yargs');
 
 function addScopeToLibraryProjectName({ name, scope }) {
@@ -273,9 +274,36 @@ function generateApplication({ groupingFolder, name, npmScope, scope }) {
       projectRoot,
       sharedEnvironmentsLibraryName,
     });
+    useSharedEnvironmentsLibraryInFileReplacements({
+      name,
+      sharedEnvironmentsLibraryName,
+    });
 
     const projectPath = `${pathPrefix}/${name}`;
     deleteEnvironmentsFolder({ projectPath });
+  }
+
+  function useSharedEnvironmentsLibraryInFileReplacements({
+    name,
+    sharedEnvironmentsLibraryName,
+  }) {
+    const sharedEnvironmentsLibraryRoot = readAngularJson()
+      .projects[sharedEnvironmentsLibraryName]
+      .root;
+    const libFolderPath =
+      [sharedEnvironmentsLibraryRoot, 'src', 'lib'].join('/');
+    const environmentsFilePath = [libFolderPath, 'environment.ts'].join('/');
+    const environmentsProdFilePath =
+      [libFolderPath, 'environment.prod.ts'].join('/');
+
+    runCommand(
+      'npx json -I -f angular.json -e '
+      + `"this.projects['${name}'].architect.build.configurations.production.`
+      + `fileReplacements[0].replace = '${environmentsFilePath}'"`);
+    runCommand(
+      'npx json -I -f angular.json -e '
+      + `"this.projects['${name}'].architect.build.configurations.production.`
+      + `fileReplacements[0].with = '${environmentsProdFilePath}'"`);
   }
 
   extractEndToEndTestingProject({ name, pathPrefix });
