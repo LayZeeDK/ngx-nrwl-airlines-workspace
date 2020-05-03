@@ -90,8 +90,8 @@ function configureApplicationArchitects({ name, pathPrefix }) {
     + `!${pathPrefix}/${name}-e2e/**`);
 }
 
-function configureKarmaConfig({ groupingFolder, name, pathPrefix, projectRoot }) {
-  const coveragePath = pathPrefix.replace(`${projectRoot}/`, '') + `/${name}`;
+function configureKarmaConfig({ groupingFolder, name, pathPrefix }) {
+  const coveragePath = `${pathPrefix}/${name}`;
   const directoryUpNavigationCount = groupingFolder.split('/').length + 2;
   const directoryUpNavigations =
     Array(directoryUpNavigationCount).fill('..').join('/');
@@ -276,7 +276,6 @@ function generateApplication({ groupingFolder, name, npmScope, scope }) {
     });
     useSharedEnvironmentsLibraryInFileReplacements({
       name,
-      projectRoot,
       sharedEnvironmentsLibraryName,
     });
 
@@ -286,7 +285,6 @@ function generateApplication({ groupingFolder, name, npmScope, scope }) {
 
   function useSharedEnvironmentsLibraryInFileReplacements({
     name,
-    projectRoot,
     sharedEnvironmentsLibraryName,
   }) {
     const sharedEnvironmentsLibraryRoot = readAngularJson()
@@ -310,7 +308,7 @@ function generateApplication({ groupingFolder, name, npmScope, scope }) {
 
   extractEndToEndTestingProject({ name, pathPrefix });
   configureApplicationArchitects({ name, pathPrefix });
-  configureKarmaConfig({ groupingFolder, name, pathPrefix, projectRoot });
+  configureKarmaConfig({ groupingFolder, name, pathPrefix });
 
   if (hasFeatureShellLibrary({ scope })) {
     useFeatureShell({ groupingFolder, name, scope });
