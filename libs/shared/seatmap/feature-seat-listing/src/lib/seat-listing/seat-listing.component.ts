@@ -13,4 +13,8 @@ export class SeatListingComponent {
 
     return formatDate(now);
   }
+
+  onSeatConfirmed(isConfirmed: boolean): void {
+    console.log('Is seat confirmed?', isConfirmed);
+  }
 }

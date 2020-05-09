@@ -1,15 +1,18 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 @Component({
   selector: 'nrwl-airlines-confirm-button',
+  styleUrls: ['./confirm-button.component.css'],
   templateUrl: './confirm-button.component.html',
-  styleUrls: ['./confirm-button.component.css']
 })
-export class ConfirmButtonComponent implements OnInit {
+export class ConfirmButtonComponent {
+  @Input()
+  message = 'Do you confirm this action?';
 
-  constructor() { }
+  @Output()
+  confirmed = new EventEmitter<boolean>();
 
-  ngOnInit(): void {
+  onClick() {
+    this.confirmed.emit(confirm(this.message));
   }
-
 }
