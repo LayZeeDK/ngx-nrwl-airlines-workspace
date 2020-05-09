@@ -1,5 +1,5 @@
 const childProcess = require('child_process');
-const fs = requirere('path');
+const fs = require('fs');
 const yargs = require('yargs');
 
 function addScopeToLibraryProjectName({ name, scope }) {
@@ -15,9 +15,9 @@ function adjustAppComponentSpecToAppComponentTemplate({
   const filePath =
     `${appFolderPath({ groupingFolder, name })}/app.component.spec.ts`;
   const search =
-    "expect(compiled.querySelector('.content span').textContent).toContain('check-in-desktop app is running!');";
+    `expect(compiled.querySelector('.content span').textContent).toContain('${name} app is running!');`;
   const replacement =
-    "expect(compiled.querySelector('h1').textContent).toContain('check-in-desktop');";
+    `expect(compiled.querySelector('h1').textContent).toContain('${name}');`;
 
   searchAndReplaceInFile({ filePath, replacement, search });
 }
@@ -231,6 +231,7 @@ import { AppComponent } from './app.component';`;
 
 function featureShellModule({ componentName, name, scope }) {
   const featureShellModuleClassName = toPascalCase(`${scope}-${name}-module`);
+  const shellComponentClassName = toPascalCase(`${componentName}-component`);
 
   return `import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
